@@ -34,7 +34,7 @@ with open(entries_path, "w") as f:
     json.dump(transactions, f, indent=2)
 
 # Save current status
-status_path = "/mnt/data/lottery_status.json"
+entries_path = "/mnt/data/lottery_entries.json"
 with open(status_path, "w") as f:
     json.dump(lottery_status, f, indent=2)
 
