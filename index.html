@@ -8,11 +8,11 @@
   <meta name="theme-color" content="#ff4d4d">
   <link rel="icon" href="icon-192.png">
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Inter&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter&display=swap" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
-      color: #ffffff;
+      background: #121212;
+      color: #e0e0e0;
       font-family: 'Inter', sans-serif;
       margin: 0;
       padding: 20px;
@@ -23,27 +23,33 @@
       text-align: center;
       font-family: 'Orbitron', sans-serif;
       color: #ff4d4d;
-      margin-bottom: 25px;
-      font-size: 2.2em;
+      margin-bottom: 20px;
+      font-size: 2.5em;
       animation: pulse 3s infinite;
     }
 
+    h1:hover, .dashboard h3:hover {
+      text-shadow: 0 0 15px #ff4d4d, 0 0 30px #00ffff;
+      color: #fff;
+    }
+
     .dashboard {
-      max-width: 680px;
-      margin: 30px auto;
-      background: rgba(255, 255, 255, 0.03);
+      max-width: 700px;
+      margin: 25px auto;
+      background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(12px);
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 28px;
-      box-shadow: 0 0 20px rgba(255, 77, 77, 0.3);
-      animation: fadeInUp 0.8s ease-in-out;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+      transition: all 0.3s ease;
+      animation: fadeInUp 1s ease-in-out;
     }
 
     .dashboard:hover {
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: 0 0 30px rgba(255, 77, 77, 0.4), 0 0 10px #00ffff;
-      transform: scale(1.01);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.3), 0 0 8px #ff4d4d;
+      transform: scale(1.02);
     }
 
     .stat {
@@ -51,15 +57,24 @@
     }
 
     .stat label {
-      font-weight: 600;
+      font-weight: bold;
       display: block;
-      color: #ccc;
+      color: #bbb;
     }
 
     .stat span {
       font-size: 1.5em;
-      color: #ffffff;
+      color: #fff;
       word-break: break-word;
+    }
+
+    .break-hash {
+      font-family: monospace;
+      font-size: 0.92em;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      line-height: 1.3em;
+      display: block;
     }
 
     .countdown {
@@ -72,15 +87,15 @@
     }
 
     .countdown span {
-      font-size: 1.7em;
+      font-size: 1.8em;
       font-weight: bold;
     }
 
     footer {
       text-align: center;
-      margin-top: 50px;
+      margin-top: 45px;
       font-size: 0.9em;
-      color: #999;
+      color: #888;
     }
 
     button {
@@ -88,17 +103,16 @@
       color: #000;
       border: none;
       border-radius: 8px;
-      padding: 12px 16px;
+      padding: 12px 18px;
       font-weight: bold;
       cursor: pointer;
       width: 100%;
-      font-size: 1em;
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease, background 0.2s ease;
     }
 
     button:hover {
       background: #ff6666;
-      transform: translateY(-2px);
+      transform: translateY(-3px);
     }
 
     input {
@@ -107,34 +121,18 @@
       margin: 6px 0 12px;
       border-radius: 6px;
       border: none;
-      background: #222;
-      color: #fff;
-    }
-
-    .break-hash {
-      font-family: monospace;
-      font-size: 0.92em;
-      word-break: break-word;
-      overflow-wrap: break-word;
-      line-height: 1.3em;
-      display: block;
-      color: #00ffff;
     }
 
     @media (max-width: 600px) {
       body {
-        padding: 12px;
-      }
-
-      h1 {
-        font-size: 1.6em;
+        padding: 15px;
       }
     }
 
     @keyframes fadeInUp {
       from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(25px);
       }
       to {
         opacity: 1;
@@ -201,23 +199,21 @@
     </form>
   </div>
 
-  <footer>
-    Powered by $DOG on Bitcoin | Updated every 24h via GitHub Actions
-  </footer>
+  <footer>Powered by $DOG on Bitcoin | Updated every 24h via GitHub Actions</footer>
 
   <script>
     async function loadLotteryData() {
       try {
         const res = await fetch("lottery_status.json");
         const data = await res.json();
-        const formatDOG = (n) => parseFloat(n).toFixed(8).replace(/\.0+$/, '');
+        const formatDOG = n => parseFloat(n).toFixed(8).replace(/\.0+$/, "");
         document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
         document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
         document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
         document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
-        document.getElementById("winnerTx").innerHTML = `<div class='break-hash'>${data.winner.txid}</div><div style='color:#aaa;'>(${formatDOG(data.winner.amount)} $DOG)</div>`;
-      } catch (err) {
-        document.getElementById("winnerTx").innerHTML = `<div style='color:red;'>Failed to load winner data</div>`;
+        document.getElementById("winnerTx").innerHTML = `<div class="break-hash">${data.winner.txid}</div><div style="color:#aaa;">(${formatDOG(data.winner.amount)} $DOG)</div>`;
+      } catch {
+        document.getElementById("winnerTx").innerHTML = `<div style="color:red;">Failed to load winner data</div>`;
       }
     }
 
@@ -230,17 +226,17 @@
         entries.forEach(entry => {
           const li = document.createElement("li");
           li.style.padding = "6px 0";
-          li.innerHTML = `<div class='break-hash'>Tx: ${entry.txid}</div><div style='color:#ccc;'>— ${entry.amount} $DOG</div>`;
+          li.innerHTML = `<div class="break-hash">Tx: ${entry.txid}</div><div style="color:#ccc;">— ${entry.amount} $DOG</div>`;
           list.appendChild(li);
         });
       } catch {
-        document.getElementById("entryList").innerHTML = `<li style='color:red;'>No entries found.</li>`;
+        document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
       }
     }
 
     function generateQR() {
       const address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
-      QRCode.toDataURL(address, function (err, url) {
+      QRCode.toDataURL(address, (err, url) => {
         document.getElementById("qrCode").innerHTML = `<img src="${url}" style="max-width:200px;" alt="QR Code">`;
       });
     }
@@ -254,12 +250,12 @@
         const entries = await res.json();
         const match = entries.find(entry => entry.txid.toLowerCase().includes(input));
         if (match) {
-          box.innerHTML = `<p class='break-hash'>Found: <strong>${match.txid}</strong> — ${match.amount} $DOG</p>`;
+          box.innerHTML = `<p class="break-hash">Found: <strong>${match.txid}</strong> — ${match.amount} $DOG</p>`;
         } else {
-          box.innerHTML = `<p style='color:red;'>No entry found for "${input}".</p>`;
+          box.innerHTML = `<p style="color:red;">No entry found for "${input}".</p>`;
         }
       } catch {
-        box.innerHTML = `<p style='color:red;'>Error checking entry.</p>`;
+        box.innerHTML = `<p style="color:red;">Error checking entry.</p>`;
       }
     }
 
@@ -268,32 +264,41 @@
       const nextRound = new Date();
       nextRound.setUTCHours(0, 0, 0, 0);
       if (now > nextRound.getTime()) nextRound.setUTCDate(nextRound.getUTCDate() + 1);
+
       function updateCountdown() {
         const distance = nextRound - new Date().getTime();
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
         document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
-        if (distance < 0) location.reload();
+        if (distance < 0) {
+          clearInterval(timer);
+          document.getElementById("countdown").innerText = "Refreshing...";
+          location.reload();
+        }
       }
+
       updateCountdown();
-      setInterval(updateCountdown, 1000);
+      const timer = setInterval(updateCountdown, 1000);
     }
 
-    document.getElementById("notifyForm").addEventListener("submit", async function (e) {
+    document.getElementById("notifyForm").addEventListener("submit", function (e) {
       e.preventDefault();
       const tx = document.getElementById("txInput").value.trim();
       const contact = document.getElementById("emailInput").value.trim();
       const consent = document.getElementById("consentCheckbox").checked;
+
       if (!tx || !contact || !consent) {
         document.getElementById("notifyStatus").innerText = "Please complete all fields.";
         return;
       }
+
       const data = {
         tx_or_address: tx,
         contact_info: contact,
         timestamp: new Date().toISOString()
       };
+
       console.log("Saved notification request:", data);
       document.getElementById("notifyStatus").innerText = "Saved! You'll be notified if you win!";
       document.getElementById("notifyForm").reset();
