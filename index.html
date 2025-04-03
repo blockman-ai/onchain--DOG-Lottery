@@ -219,8 +219,10 @@
           <div style="color:#aaa;">(${formatDOG(data.winner.amount)} $DOG)</div>
         `;
       } catch (err) {
-        document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load data.</p>`;
-      }
+        document.getElementById("winnerTx").innerHTML = `
+  <div class="break-hash">${data.winner.txid}</div>
+  <div style="color:#aaa;">(${formatDOG(data.winner.amount)} $DOG)</div>
+`;
     }
 
     async function loadEntries() {
