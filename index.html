@@ -76,6 +76,10 @@
       <span id="winnerTx">Loading...</span>
     </div>
   </div>
+<div style="text-align:center; margin-top: 20px;">
+  <h3 style="color:#ffcc00;">Next Round Starts In:</h3>
+  <div id="countdown" style="font-size: 1.6em; font-weight: bold;"></div>
+</div>
 
   <footer>
     Powered by $DOG on Bitcoin | Updated every 24h via GitHub Actions
@@ -99,7 +103,35 @@
     }
 
     loadLotteryData();
-  </script>
+  </script>// Countdown timer logic
+function startCountdown() {
+  const now = new Date().getTime();
+  const nextRound = new Date();
+  nextRound.setUTCHours(0, 0, 0, 0); // Reset to next midnight UTC
+  if (now > nextRound.getTime()) {
+    nextRound.setUTCDate(nextRound.getUTCDate() + 1);
+  }
+
+  function updateCountdown() {
+    const distance = nextRound - new Date().getTime();
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
+
+    if (distance < 0) {
+      clearInterval(timer);
+      document.getElementById("countdown").innerText = "Refreshing...";
+      location.reload();
+    }
+  }
+
+  updateCountdown();
+  const timer = setInterval(updateCountdown, 1000);
+}
+
+startCountdown();
+
 
 </body>
 </html>
