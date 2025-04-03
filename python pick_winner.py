@@ -40,3 +40,24 @@ def main():
 
 if __name__ == "__main__":
     main()
+from datetime import datetime, timedelta
+
+# Simulate transactions (normally pulled from an API like Hiro or mempool.space)
+transactions = [
+    {"txid": "tx1", "amount": 10, "timestamp": datetime.utcnow() - timedelta(hours=1)},
+    {"txid": "tx2", "amount": 20, "timestamp": datetime.utcnow() - timedelta(hours=2)},
+    {"txid": "tx3", "amount": 15, "timestamp": datetime.utcnow() - timedelta(hours=3)}
+]
+
+# Calculate live pot total
+total_pot = sum(tx["amount"] for tx in transactions)
+creator_fee = total_pot * 0.05
+rollover_amount = total_pot * 0.20
+winner_payout = total_pot * 0.75
+
+{
+    "live_pot_total": total_pot,
+    "payout_to_winner": winner_payout,
+    "rollover_to_next_round": rollover_amount,
+    "creator_fee": creator_fee
+}
