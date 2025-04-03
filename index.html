@@ -65,6 +65,13 @@
       word-break: break-word;
     }
 
+    .break-hash {
+      font-family: monospace;
+      font-size: 0.92em;
+      word-break: break-word;
+      line-height: 1.3em;
+    }
+
     .countdown {
       text-align: center;
       margin-top: 30px;
@@ -140,7 +147,7 @@
     </div>
     <div class="stat">
       <label>Last Winner:</label>
-      <span id="winnerTx" style="font-family: monospace; font-size: 0.95em;">Loading...</span>
+      <span id="winnerTx" class="break-hash">Loading...</span>
     </div>
   </div>
 
@@ -157,7 +164,7 @@
   <div class="dashboard">
     <h3 style="color:#ffcc00;">How to Enter</h3>
     <p>Send any amount of <strong>$DOG</strong> Rune to:</p>
-    <p style="word-break: break-all;">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</p>
+    <p class="break-hash">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</p>
     <button onclick="generateQR()">Show QR Code</button>
     <div id="qrCode" style="margin-top: 15px;"></div>
     <p style="margin-top:10px;">Each transaction = 1 lottery entry. Winner drawn every 24h.</p>
@@ -195,7 +202,10 @@
         document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
         document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
         document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
-        document.getElementById("winnerTx").innerText = `${data.winner.txid} (${formatDOG(data.winner.amount)} $DOG)`;
+        document.getElementById("winnerTx").innerHTML = `
+          <div>${data.winner.txid}</div>
+          <div style="color:#aaa;">(${formatDOG(data.winner.amount)} $DOG)</div>
+        `;
       } catch (err) {
         document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load data.</p>`;
       }
@@ -210,8 +220,10 @@
         entries.forEach(entry => {
           const li = document.createElement("li");
           li.style.padding = "6px 0";
-          li.style.wordBreak = "break-word";
-          li.innerText = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
+          li.innerHTML = `
+            <div class="break-hash">Tx: ${entry.txid}</div>
+            <div style="color:#ccc;">— ${entry.amount} $DOG</div>
+          `;
           list.appendChild(li);
         });
       } catch {
@@ -237,7 +249,7 @@
           entry.txid.toLowerCase().includes(input)
         );
         if (match) {
-          box.innerHTML = `<p>Found: <strong>${match.txid}</strong> — ${match.amount} $DOG</p>`;
+          box.innerHTML = `<p class="break-hash">Found: <strong>${match.txid}</strong> — ${match.amount} $DOG</p>`;
         } else {
           box.innerHTML = `<p style="color:red;">No entry found for "${input}".</p>`;
         }
