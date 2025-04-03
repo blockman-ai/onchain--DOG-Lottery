@@ -1,6 +1,5 @@
 import requests, json, random
 from datetime import datetime
-from decimal import Decimal
 
 LOTTERY_ADDRESS = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4"
 CREATOR_ADDRESS = "bc1prhcdy4ytncv8xgq0xwtqg0gfk2t38asddq3ex7xxa43dxhrfhkhsn6yhk9"
@@ -8,9 +7,6 @@ API_URL = f"https://open-api.unisat.io/v1/indexer/address/{LOTTERY_ADDRESS}/rune
 
 headers = {"accept": "application/json"}
 entries = []
-
-def convert_rune_amount(raw_amount: str) -> float:
-    return float(Decimal(raw_amount) / Decimal(1e9))
 
 try:
     res = requests.get(API_URL, headers=headers)
@@ -21,7 +17,7 @@ try:
             if t["tick"] == "DOG" and t["to"] == LOTTERY_ADDRESS:
                 entries.append({
                     "txid": tx["txid"],
-                    "amount": round(convert_rune_amount(t["amount"]), 4),
+                    "amount": int(t["amount"]),  # FIXED: now uses raw integer DOG amount
                     "timestamp": datetime.utcfromtimestamp(tx.get("blocktime", datetime.utcnow().timestamp())).isoformat()
                 })
 
@@ -30,9 +26,9 @@ try:
 
     status = {
         "live_pot_total": total,
-        "payout_to_winner": round(total * 0.75, 4),
-        "rollover_to_next_round": round(total * 0.20, 4),
-        "creator_fee": round(total * 0.05, 4),
+        "payout_to_winner": int(total * 0.75),
+        "rollover_to_next_round": int(total * 0.20),
+        "creator_fee": int(total * 0.05),
         "winner": winner,
         "creator_address": CREATOR_ADDRESS
     }
