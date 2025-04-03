@@ -21,16 +21,15 @@
 
     .dashboard {
       max-width: 600px;
-      margin: 0 auto;
+      margin: 0 auto 20px;
       background: #1a1a1a;
       border: 1px solid #333;
       border-radius: 8px;
       padding: 20px;
-      margin-top: 20px;
     }
 
     .stat {
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
 
     .stat label {
@@ -40,22 +39,45 @@
     }
 
     .stat span {
-      font-size: 1.4em;
+      font-size: 1.3em;
       color: #fff;
     }
 
-    .countdown, .instructions {
+    .countdown {
       text-align: center;
-      margin-top: 30px;
+      margin: 30px 0;
     }
 
-    .countdown h3, .instructions h3 {
+    .countdown h3 {
       color: #ffcc00;
+      margin-bottom: 8px;
     }
 
     .countdown span {
       font-size: 1.6em;
       font-weight: bold;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 5px 0;
+    }
+
+    .how-to {
+      background: #1a1a1a;
+      padding: 20px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: 0 auto 30px;
+    }
+
+    .how-to h3 {
+      color: #ffcc00;
     }
 
     footer {
@@ -64,11 +86,6 @@
       font-size: 0.85em;
       color: #777;
     }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
   </style>
 </head>
 <body>
@@ -76,11 +93,11 @@
   <h1>$DOG Lottery</h1>
 
   <div class="dashboard">
-    <div class="stat"><label>Live Pot Total:</label><span id="potTotal">Loading...</span></div>
-    <div class="stat"><label>Winner Payout (75%):</label><span id="winnerPayout">Loading...</span></div>
-    <div class="stat"><label>Rollover (20%):</label><span id="rollover">Loading...</span></div>
-    <div class="stat"><label>Creator Fee (5%):</label><span id="creatorFee">Loading...</span></div>
-    <div class="stat"><label>Last Winner:</label><span id="winnerTx">Loading...</span></div>
+    <div class="stat"><label>Live Pot Total:</label> <span id="potTotal">Loading...</span></div>
+    <div class="stat"><label>Winner Payout (75%):</label> <span id="winnerPayout">Loading...</span></div>
+    <div class="stat"><label>Rollover (20%):</label> <span id="rollover">Loading...</span></div>
+    <div class="stat"><label>Creator Fee (5%):</label> <span id="creatorFee">Loading...</span></div>
+    <div class="stat"><label>Last Winner:</label> <span id="winnerTx">Loading...</span></div>
   </div>
 
   <div class="countdown">
@@ -90,13 +107,13 @@
 
   <div class="dashboard">
     <h3 style="color:#ffcc00;">Current Entries</h3>
-    <ul id="entryList"><li>Loading...</li></ul>
+    <ul id="entryList"></ul>
   </div>
 
-  <div class="dashboard instructions">
+  <div class="how-to">
     <h3>How to Enter</h3>
-    <p>Send any amount of <strong>$DOG Rune</strong> to:</p>
-    <p style="font-family: monospace; font-size: 1em; color: #fff;">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</p>
+    <p>Send any amount of <strong>$DOG</strong> Rune to:</p>
+    <p style="word-break: break-all;"><code>bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</code></p>
     <p>Each transaction = 1 lottery entry.<br>Winner drawn every 24 hours.</p>
   </div>
 
@@ -115,7 +132,7 @@
         document.getElementById("creatorFee").innerText = `${data.creator_fee} $DOG`;
         document.getElementById("winnerTx").innerText = `${data.winner.txid} (${data.winner.amount} $DOG)`;
       } catch (err) {
-        document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load lottery data.</p>`;
+        console.error("Failed to load lottery data", err);
       }
     }
 
@@ -127,11 +144,11 @@
         list.innerHTML = "";
         entries.forEach(entry => {
           const li = document.createElement("li");
-          li.style.padding = "6px 0";
           li.innerText = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
           list.appendChild(li);
         });
-      } catch {
+      } catch (err) {
+        console.error("Failed to load entries", err);
         document.getElementById("entryList").innerHTML = `<li style="color:red;">Failed to load entries.</li>`;
       }
     }
@@ -150,7 +167,6 @@
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
         document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
-
         if (distance < 0) {
           clearInterval(timer);
           document.getElementById("countdown").innerText = "Refreshing...";
