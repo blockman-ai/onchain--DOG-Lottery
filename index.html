@@ -94,6 +94,29 @@
     }
 
     loadLotteryData();
-  </script>
-</body>
+  </script><script>
+  fetch('lottery_status.json')
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('potTotal').textContent = data.live_pot_total;
+      document.getElementById('payout').textContent = data.payout_to_winner;
+      document.getElementById('rollover').textContent = data.rollover_to_next_round;
+      document.getElementById('fee').textContent = data.creator_fee;
+      document.getElementById('winnerTx').textContent = `${data.winner.txid} (${data.winner.amount} DOG)`;
+    })
+    .catch(error => {
+      console.error('Error loading lottery data:', error);
+      document.getElementById('lotteryData').innerHTML = `<p style="color:red;">Failed to load lottery data.</p>`;
+    });
+</script>
+
+</body><div id="lotteryData" style="margin: 30px; padding: 20px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
+  <h2 style="color:#ffcc00;">Live Pot Status</h2>
+  <p><strong>Total Pot:</strong> <span id="potTotal">Loading...</span> DOG</p>
+  <p><strong>Payout to Winner:</strong> <span id="payout">Loading...</span> DOG</p>
+  <p><strong>Rollover:</strong> <span id="rollover">Loading...</span> DOG</p>
+  <p><strong>Creator Fee:</strong> <span id="fee">Loading...</span> DOG</p>
+  <p><strong>Last Winner:</strong> <span id="winnerTx">Loading...</span></p>
+</div>
+
 </html>
