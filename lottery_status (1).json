@@ -1,11 +1,22 @@
-{
-  "live_pot_total": 400,
-  "payout_to_winner": 300.0,
-  "rollover_to_next_round": 80.0,
-  "creator_fee": 20.0,
-  "winner": {
-    "txid": "tx002",
-    "amount": 200,
-    "timestamp": "2025-04-03 07:51:54.761409"
-  }
+from datetime import datetime
+import json
+
+# Sample final data with dynamic timestamp
+lottery_status = {
+    "live_pot_total": 5000,
+    "payout_to_winner": 3750,
+    "rollover_to_next_round": 1000,
+    "creator_fee": 250,
+    "winner": {
+        "txid": "some-txid",
+        "amount": 5000
+    },
+    "creator_address": "bc1prhcdy4ytncv8xgq0xwtqg0gfk2t38asddq3ex7xxa43dxhrfhkhsn6yhk9",
+    "last_updated": datetime.utcnow().isoformat()
 }
+
+# Simulate saving updated JSON with timestamp
+with open("/mnt/data/lottery_status.json", "w") as f:
+    json.dump(lottery_status, f, indent=2)
+
+lottery_status
