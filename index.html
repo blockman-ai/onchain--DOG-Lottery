@@ -21,11 +21,12 @@
 
     .dashboard {
       max-width: 600px;
-      margin: 0 auto 20px auto;
+      margin: 0 auto;
       background: #1a1a1a;
       border: 1px solid #333;
       border-radius: 8px;
       padding: 20px;
+      margin-top: 20px;
     }
 
     .stat {
@@ -43,19 +44,12 @@
       color: #fff;
     }
 
-    footer {
-      text-align: center;
-      margin-top: 40px;
-      font-size: 0.85em;
-      color: #777;
-    }
-
-    .countdown {
+    .countdown, .instructions {
       text-align: center;
       margin-top: 30px;
     }
 
-    .countdown h3 {
+    .countdown h3, .instructions h3 {
       color: #ffcc00;
     }
 
@@ -64,17 +58,16 @@
       font-weight: bold;
     }
 
-    h3 {
-      color: #ffcc00;
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.85em;
+      color: #777;
     }
 
     ul {
       list-style: none;
-      padding-left: 0;
-    }
-
-    li {
-      padding: 6px 0;
+      padding: 0;
     }
   </style>
 </head>
@@ -83,26 +76,11 @@
   <h1>$DOG Lottery</h1>
 
   <div class="dashboard">
-    <div class="stat">
-      <label>Live Pot Total:</label>
-      <span id="potTotal">Loading...</span>
-    </div>
-    <div class="stat">
-      <label>Winner Payout (75%):</label>
-      <span id="winnerPayout">Loading...</span>
-    </div>
-    <div class="stat">
-      <label>Rollover to Next Round (20%):</label>
-      <span id="rollover">Loading...</span>
-    </div>
-    <div class="stat">
-      <label>Creator Fee (5%):</label>
-      <span id="creatorFee">Loading...</span>
-    </div>
-    <div class="stat">
-      <label>Last Winner:</label>
-      <span id="winnerTx">Loading...</span>
-    </div>
+    <div class="stat"><label>Live Pot Total:</label><span id="potTotal">Loading...</span></div>
+    <div class="stat"><label>Winner Payout (75%):</label><span id="winnerPayout">Loading...</span></div>
+    <div class="stat"><label>Rollover (20%):</label><span id="rollover">Loading...</span></div>
+    <div class="stat"><label>Creator Fee (5%):</label><span id="creatorFee">Loading...</span></div>
+    <div class="stat"><label>Last Winner:</label><span id="winnerTx">Loading...</span></div>
   </div>
 
   <div class="countdown">
@@ -111,17 +89,19 @@
   </div>
 
   <div class="dashboard">
-    <h3>Current Entries</h3>
-    <ul id="entryList"></ul>
+    <h3 style="color:#ffcc00;">Current Entries</h3>
+    <ul id="entryList"><li>Loading...</li></ul>
   </div>
 
-  <div class="dashboard">
-    <h3>Past Winners</h3>
-    <ul id="winnersList"></ul>
+  <div class="dashboard instructions">
+    <h3>How to Enter</h3>
+    <p>Send any amount of <strong>$DOG Rune</strong> to:</p>
+    <p style="font-family: monospace; font-size: 1em; color: #fff;">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</p>
+    <p>Each transaction = 1 lottery entry.<br>Winner drawn every 24 hours.</p>
   </div>
 
   <footer>
-    Powered by $DOG on Bitcoin | Updated every 24h via GitHub Actions
+    Powered by $DOG on Bitcoin | Automated via GitHub Actions
   </footer>
 
   <script>
@@ -129,14 +109,13 @@
       try {
         const res = await fetch("lottery_status.json");
         const data = await res.json();
-
         document.getElementById("potTotal").innerText = `${data.live_pot_total} $DOG`;
         document.getElementById("winnerPayout").innerText = `${data.payout_to_winner} $DOG`;
         document.getElementById("rollover").innerText = `${data.rollover_to_next_round} $DOG`;
         document.getElementById("creatorFee").innerText = `${data.creator_fee} $DOG`;
         document.getElementById("winnerTx").innerText = `${data.winner.txid} (${data.winner.amount} $DOG)`;
       } catch (err) {
-        console.error("Failed to load lottery data", err);
+        document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load lottery data.</p>`;
       }
     }
 
@@ -148,29 +127,12 @@
         list.innerHTML = "";
         entries.forEach(entry => {
           const li = document.createElement("li");
-          li.textContent = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
+          li.style.padding = "6px 0";
+          li.innerText = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
           list.appendChild(li);
         });
-      } catch (err) {
-        console.error("Failed to load entries", err);
+      } catch {
         document.getElementById("entryList").innerHTML = `<li style="color:red;">Failed to load entries.</li>`;
-      }
-    }
-
-    async function loadWinnerHistory() {
-      try {
-        const res = await fetch("winners_history.json");
-        const winners = await res.json();
-        const list = document.getElementById("winnersList");
-        list.innerHTML = "";
-        winners.forEach(winner => {
-          const li = document.createElement("li");
-          li.textContent = `Round ${winner.round}: ${winner.txid} — ${winner.amount} $DOG on ${winner.date}`;
-          list.appendChild(li);
-        });
-      } catch (err) {
-        console.error("Failed to load winners", err);
-        document.getElementById("winnersList").innerHTML = `<li style="color:red;">Failed to load winners.</li>`;
       }
     }
 
@@ -200,13 +162,9 @@
       const timer = setInterval(updateCountdown, 1000);
     }
 
-    // Initialize all
     loadLotteryData();
     loadEntries();
-    loadWinnerHistory();
     startCountdown();
   </script>
-
 </body>
 </html>
-
