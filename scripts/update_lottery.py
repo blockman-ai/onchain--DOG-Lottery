@@ -1,22 +1,34 @@
+import requests
 import json
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 
-# Simulated data (replace with API data later)
-transactions = [
-    {"txid": "tx001", "amount": 10},
-    {"txid": "tx002", "amount": 20},
-    {"txid": "tx003", "amount": 30}
-]
+ADDRESS = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4"
+API_URL = f"https://mempool.space/api/address/{ADDRESS}/txs"
 
-# Calculate pot distribution
+# Get recent transactions from mempool
+response = requests.get(API_URL)
+txs = response.json()
+
+transactions = []
+for tx in txs:
+    # Estimate amount from outputs going to your address
+    for vout in tx.get("vout", []):
+        if vout["scriptpubkey_address"] == ADDRESS:
+            amount = round(vout["value"] / 100_000_000, 8)  # Convert sats to BTC
+            transactions.append({
+                "txid": tx["txid"],
+                "amount": amount
+            })
+
+# --- Lottery Logic ---
 total_pot = sum(tx["amount"] for tx in transactions)
-winner_payout = round(total_pot * 0.75, 2)
-rollover = round(total_pot * 0.20, 2)
-creator_fee = round(total_pot * 0.05, 2)
-winner = random.choice(transactions)
+winner_payout = round(total_pot * 0.75, 8)
+rollover = round(total_pot * 0.20, 8)
+creator_fee = round(total_pot * 0.05, 8)
+winner = random.choice(transactions) if transactions else {"txid": "none", "amount": 0}
 
-# 1. Save lottery_status.json
+# --- Save JSON Output ---
 lottery_status = {
     "live_pot_total": total_pot,
     "payout_to_winner": winner_payout,
@@ -25,12 +37,8 @@ lottery_status = {
     "winner": winner
 }
 
-with open("lottery_status.json", "w") as f:
-    json.dump(lottery_status, f, indent=2)
-
-# 2. Save lottery_entries.json
-for tx in transactions:
-    tx["timestamp"] = datetime.utcnow().isoformat()
-
 with open("lottery_entries.json", "w") as f:
     json.dump(transactions, f, indent=2)
+
+with open("lottery_status.json", "w") as f:
+    json.dump(lottery_status, f, indent=2)
