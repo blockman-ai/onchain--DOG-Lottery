@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>$DOG Lottery Dashboard</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffcc00">
+  <link rel="icon" href="icon-192.png">
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter&display=swap" rel="stylesheet">
   <style>
@@ -171,11 +174,12 @@
       try {
         const res = await fetch("lottery_status.json");
         const data = await res.json();
-        document.getElementById("potTotal").innerText = `${data.live_pot_total} $DOG`;
-        document.getElementById("winnerPayout").innerText = `${data.payout_to_winner} $DOG`;
-        document.getElementById("rollover").innerText = `${data.rollover_to_next_round} $DOG`;
-        document.getElementById("creatorFee").innerText = `${data.creator_fee} $DOG`;
-        document.getElementById("winnerTx").innerText = `${data.winner.txid} (${data.winner.amount} $DOG)`;
+        const formatDOG = (n) => parseFloat(n).toFixed(8).replace(/\.?0+$/, '');
+        document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
+        document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
+        document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
+        document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
+        document.getElementById("winnerTx").innerText = `${data.winner.txid} (${formatDOG(data.winner.amount)} $DOG)`;
       } catch (err) {
         document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load data.</p>`;
       }
@@ -272,7 +276,14 @@
       document.getElementById("notifyForm").reset();
     });
 
-    // Load everything
+    // Service Worker registration for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("Service Worker Registered"))
+        .catch(err => console.error("Service Worker registration failed:", err));
+    }
+
+    // Init
     loadLotteryData();
     loadEntries();
     startCountdown();
