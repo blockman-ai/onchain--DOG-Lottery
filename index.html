@@ -96,6 +96,7 @@
     <h3>Next Round Starts In:</h3>
     <span id="countdown">Loading...</span>
   </div>
+
   <div class="dashboard" style="margin-top: 30px;">
     <h3 style="color:#ffcc00;">Current Entries</h3>
     <ul id="entryList" style="list-style: none; padding: 0;"></ul>
@@ -119,6 +120,26 @@
       } catch (err) {
         console.error("Failed to load lottery data", err);
         document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load lottery data.</p>`;
+      }
+    }
+
+    async function loadEntries() {
+      try {
+        const res = await fetch("lottery_entries.json");
+        const entries = await res.json();
+
+        const list = document.getElementById("entryList");
+        list.innerHTML = "";
+
+        entries.forEach(entry => {
+          const li = document.createElement("li");
+          li.style.padding = "6px 0";
+          li.innerText = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error("Failed to load entries", err);
+        document.getElementById("entryList").innerHTML = `<li style="color:red;">Failed to load entries.</li>`;
       }
     }
 
@@ -148,7 +169,9 @@
       const timer = setInterval(updateCountdown, 1000);
     }
 
+    // Trigger everything
     loadLotteryData();
+    loadEntries();
     startCountdown();
   </script>
 
