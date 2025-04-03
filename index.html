@@ -28,11 +28,6 @@
       animation: pulse 3s infinite;
     }
 
-    h1:hover, .dashboard h3:hover {
-      text-shadow: 0 0 15px #ff4d4d, 0 0 30px #00ffff;
-      color: #fff;
-    }
-
     .dashboard {
       max-width: 700px;
       margin: 25px auto;
@@ -44,12 +39,6 @@
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
       transition: all 0.3s ease;
       animation: fadeInUp 1s ease-in-out;
-    }
-
-    .dashboard:hover {
-      background: rgba(255, 255, 255, 0.1);
-      box-shadow: 0 0 25px rgba(0, 255, 255, 0.3), 0 0 8px #ff4d4d;
-      transform: scale(1.02);
     }
 
     .stat {
@@ -82,75 +71,35 @@
       font-weight: bold;
     }
 
-    footer {
-      text-align: center;
-      margin-top: 45px;
-      font-size: 0.9em;
-      color: #888;
-    }
-
-    button {
-      background: #ff4d4d;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 18px;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-      transition: transform 0.2s ease, background 0.2s ease;
-    }
-
-    button:hover {
-      background: #ff6666;
-      transform: translateY(-3px);
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 6px 0 12px;
-      border-radius: 6px;
-      border: none;
-    }
-
     .break-hash {
+      word-break: break-word;
       font-family: monospace;
       font-size: 0.9em;
-      word-break: break-word;
-      overflow-wrap: break-word;
-      line-height: 1.3em;
-      display: block;
     }
 
     @media (max-width: 600px) {
       body {
         padding: 15px;
       }
+
+      h1 {
+        font-size: 2em;
+      }
     }
 
     @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(25px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(25px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes pulse {
-      0%, 100% {
-        text-shadow: 0 0 0px #ff4d4d;
-      }
-      50% {
-        text-shadow: 0 0 12px #ff4d4d;
-      }
+      0%, 100% { text-shadow: 0 0 0px #ff4d4d; }
+      50% { text-shadow: 0 0 12px #ff4d4d; }
     }
   </style>
 </head>
 <body>
+
   <h1>$DOG Lottery</h1>
 
   <div class="dashboard">
@@ -163,7 +112,7 @@
       <span id="winnerPayout">Loading...</span>
     </div>
     <div class="stat">
-      <label>Rollover to Next Round (20%):</label>
+      <label>Rollover (20%):</label>
       <span id="rollover">Loading...</span>
     </div>
     <div class="stat">
@@ -186,15 +135,8 @@
     <ul id="entryList" style="list-style: none; padding: 0;"></ul>
   </div>
 
-  <footer>
-    Powered by $DOG on Bitcoin — Built for the Culture
-  </footer>
-
   <script>
-    const formatDOG = (n) => parseFloat(n).toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 4
-    });
+    const formatDOG = (n) => parseInt(n).toLocaleString();
 
     async function loadLotteryData() {
       try {
@@ -206,11 +148,11 @@
         document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
         document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
         document.getElementById("winnerTx").innerHTML = `
-          <div class="break-hash" style="color: #00ffff;">${data.winner.txid}</div>
-          <div style="color:#999;">(${formatDOG(data.winner.amount)} $DOG)</div>
+          <div class="break-hash" style="color:#00ffff;">${data.winner.txid}</div>
+          <div style="color:#888;">(${formatDOG(data.winner.amount)} $DOG)</div>
         `;
       } catch (err) {
-        document.getElementById("winnerTx").innerHTML = `<div style="color:red;">Failed to load data</div>`;
+        document.getElementById("winnerTx").innerHTML = `<span style="color:red;">Failed to load data</span>`;
       }
     }
 
@@ -238,9 +180,7 @@
       const now = new Date().getTime();
       const nextRound = new Date();
       nextRound.setUTCHours(0, 0, 0, 0);
-      if (now > nextRound.getTime()) {
-        nextRound.setUTCDate(nextRound.getUTCDate() + 1);
-      }
+      if (now > nextRound.getTime()) nextRound.setUTCDate(nextRound.getUTCDate() + 1);
 
       function updateCountdown() {
         const distance = nextRound - new Date().getTime();
@@ -248,20 +188,17 @@
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
         document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
-        if (distance < 0) {
-          clearInterval(timer);
-          document.getElementById("countdown").innerText = "Refreshing...";
-          location.reload();
-        }
+        if (distance < 0) location.reload();
       }
 
       updateCountdown();
-      const timer = setInterval(updateCountdown, 1000);
+      setInterval(updateCountdown, 1000);
     }
 
     loadLotteryData();
     loadEntries();
     startCountdown();
   </script>
+
 </body>
 </html>
