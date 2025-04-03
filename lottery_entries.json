@@ -1,8 +1,12 @@
 [
   {
-    "txid": "tx002",
-    "to_address": "bc1pln2sqsx8gj0xdprshr97wdxsdy9uddvf4wqlsm37smcehfa7weqsms6ccn",
+    "txid": "sim-tx001",
+    "amount": 10,
+    "timestamp": "2025-04-03T17:32:33.328995"
+  },
+  {
+    "txid": "sim-tx002",
     "amount": 20,
-    "timestamp": "2025-04-03 09:03:22.362702"
+    "timestamp": "2025-04-03T17:32:33.329030"
   }
 ]

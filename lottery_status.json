@@ -1,12 +1,10 @@
 {
-  "live_pot_total": 45,
-  "payout_to_winner": 33.75,
-  "rollover_to_next_round": 9.0,
-  "creator_fee": 2.25,
+  "live_pot_total": 30,
+  "payout_to_winner": 22.5,
+  "rollover_to_next_round": 6.0,
+  "creator_fee": 1.5,
   "winner": {
-    "txid": "tx1",
-    "amount": 10,
-    "timestamp": "2025-04-03 09:30:07.393355"
-  },
-  "timestamp": "2025-04-03 09:30:07.393642"
+    "txid": "sim-tx002",
+    "amount": 20
+  }
 }
