@@ -17,8 +17,10 @@ try:
             if t["tick"] == "DOG" and t["to"] == LOTTERY_ADDRESS:
                 entries.append({
                     "txid": tx["txid"],
-                    "amount": int(t["amount"]),  # FIXED: now uses raw integer DOG amount
-                    "timestamp": datetime.utcfromtimestamp(tx.get("blocktime", datetime.utcnow().timestamp())).isoformat()
+                    "amount": int(t["amount"]),  # DOG is non-divisible
+                    "timestamp": datetime.utcfromtimestamp(
+                        tx.get("blocktime", datetime.utcnow().timestamp())
+                    ).isoformat()
                 })
 
     total = sum(e["amount"] for e in entries)
@@ -38,6 +40,8 @@ try:
 
     with open("lottery_status.json", "w") as f:
         json.dump(status, f, indent=2)
+
+    print("Lottery data updated successfully.")
 
 except Exception as e:
     print("Error:", e)
