@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>$DOG Rune Lottery</title>
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      text-align: center;
+      padding: 40px 20px;
+      background: #000;
+    }
+    h1 {
+      color: #ffcc00;
+      margin-bottom: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    .section {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .label {
+      color: #aaa;
+      margin-bottom: 5px;
+    }
+    .value {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #ffcc00;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      padding: 5px 0;
+      border-bottom: 1px solid #333;
+    }
+    .join-btn {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      background: #ffcc00;
+      color: #111;
+      padding: 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .join-btn:hover {
+      background: #e6b800;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>$DOG Lottery</h1>
+    <p>A simple 24hr on-chain lottery for the DOG community.</p>
+  </header>
+
+  <div class="container">
+    <div class="section">
+      <div class="label">Current Pot</div>
+      <div class="value" id="currentPot">Loading...</div>
+    </div>
+
+    <div class="section">
+      <div class="label">Time Remaining</div>
+      <div class="value" id="countdown">Loading...</div>
+    </div>
+
+    <div class="section">
+      <div class="label">Entries</div>
+      <ul id="entriesList">
+        <li>Loading...</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="label">Past Winners</div>
+      <ul id="winnersList">
+        <li>Loading...</li>
+      </ul>
+    </div>
+
+    <a class="join-btn" href="https://unisat.io/send?address=YOUR_DOG_LOTTERY_ADDRESS" target="_blank">Join Lottery</a>
+  </div>
+
+  <script>
+    // Replace with your backend API or static JSON paths
+    const countdownTarget = new Date().getTime() + 1000 * 60 * 60 * 24;
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = countdownTarget - now;
+
+      if (distance <= 0) {
+        document.getElementById("countdown").innerText = "Drawing now...";
+        return;
+      }
+
+      const hours = Math.floor(distance / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // Dummy data (to be replaced with fetch from GitHub Actions script)
+    document.getElementById("currentPot").innerText = "312,000 $DOG";
+
+    document.getElementById("entriesList").innerHTML = `
+      <li>bc1...x7p4</li>
+      <li>bc1...jvkl</li>
+      <li>bc1...9flk</li>
+    `;
+
+    document.getElementById("winnersList").innerHTML = `
+      <li>bc1...x7p4 won 234,000 $DOG</li>
+      <li>bc1...kz82 won 198,000 $DOG</li>
+    `;
+  </script>
+
+</body>
+</html>
