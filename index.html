@@ -62,6 +62,16 @@
     .stat span {
       font-size: 1.4em;
       color: #fff;
+      word-break: break-word;
+    }
+
+    .break-hash {
+      font-family: monospace;
+      font-size: 0.92em;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      line-height: 1.3em;
+      display: block;
     }
 
     .countdown {
@@ -125,7 +135,7 @@
     <div class="stat"><label>Winner Payout (75%):</label><span id="winnerPayout">Loading...</span></div>
     <div class="stat"><label>Rollover (20%):</label><span id="rollover">Loading...</span></div>
     <div class="stat"><label>Creator Fee (5%):</label><span id="creatorFee">Loading...</span></div>
-    <div class="stat"><label>Last Winner:</label><span id="winnerTx">Loading...</span></div>
+    <div class="stat"><label>Last Winner:</label><span id="winnerTx" class="break-hash">Loading...</span></div>
   </div>
 
   <div class="countdown">
@@ -141,7 +151,7 @@
   <div class="dashboard">
     <h3 style="color:#ffcc00;">How to Enter</h3>
     <p>Send any amount of <strong>$DOG</strong> Rune to:</p>
-    <p style="word-break: break-all;">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</p>
+    <p class="break-hash">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</p>
     <button onclick="generateQR()">Show QR Code</button>
     <div id="qrCode" style="margin-top: 15px;"></div>
     <p style="margin-top:10px;">Each transaction = 1 lottery entry. Winner drawn every 24h.</p>
@@ -169,122 +179,6 @@
     Powered by $DOG on Bitcoin | Updated every 24h via GitHub Actions
   </footer>
 
-  <script>
-    async function loadLotteryData() {
-      try {
-        const res = await fetch("lottery_status.json");
-        const data = await res.json();
-        const formatDOG = (n) => parseFloat(n).toFixed(8).replace(/\.0+$/, "");
-        document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
-        document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
-        document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
-        document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
-        document.getElementById("winnerTx").innerText = `${data.winner.txid} (${formatDOG(data.winner.amount)} $DOG)`;
-      } catch (err) {
-        document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load data.</p>`;
-      }
-    }
-
-    async function loadEntries() {
-      try {
-        const res = await fetch("lottery_entries.json");
-        const entries = await res.json();
-        const list = document.getElementById("entryList");
-        list.innerHTML = "";
-        entries.forEach(entry => {
-          const li = document.createElement("li");
-          li.style.padding = "6px 0";
-          li.innerText = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
-          list.appendChild(li);
-        });
-      } catch {
-        document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
-      }
-    }
-
-    function generateQR() {
-      const address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
-      QRCode.toDataURL(address, function (err, url) {
-        document.getElementById("qrCode").innerHTML = `<img src="${url}" style="max-width:200px;" alt="QR Code">`;
-      });
-    }
-
-    async function lookupEntry() {
-      const input = document.getElementById("lookupInput").value.trim().toLowerCase();
-      const box = document.getElementById("entryResult");
-      box.innerHTML = "Searching...";
-      try {
-        const res = await fetch("lottery_entries.json");
-        const entries = await res.json();
-        const match = entries.find(entry =>
-          entry.txid.toLowerCase().includes(input)
-        );
-        if (match) {
-          box.innerHTML = `<p>Found: <strong>${match.txid}</strong> — ${match.amount} $DOG</p>`;
-        } else {
-          box.innerHTML = `<p style="color:red;">No entry found for "${input}".</p>`;
-        }
-      } catch {
-        box.innerHTML = `<p style="color:red;">Error checking entry.</p>`;
-      }
-    }
-
-    function startCountdown() {
-      const now = new Date().getTime();
-      const nextRound = new Date();
-      nextRound.setUTCHours(0, 0, 0, 0);
-      if (now > nextRound.getTime()) {
-        nextRound.setUTCDate(nextRound.getUTCDate() + 1);
-      }
-
-      function updateCountdown() {
-        const distance = nextRound - new Date().getTime();
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
-        if (distance < 0) {
-          clearInterval(timer);
-          document.getElementById("countdown").innerText = "Refreshing...";
-          location.reload();
-        }
-      }
-
-      updateCountdown();
-      const timer = setInterval(updateCountdown, 1000);
-    }
-
-    document.getElementById("notifyForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const tx = document.getElementById("txInput").value.trim();
-      const contact = document.getElementById("emailInput").value.trim();
-      const consent = document.getElementById("consentCheckbox").checked;
-
-      if (!tx || !contact || !consent) {
-        document.getElementById("notifyStatus").innerText = "Please complete all fields.";
-        return;
-      }
-
-      const data = {
-        tx_or_address: tx,
-        contact_info: contact,
-        timestamp: new Date().toISOString()
-      };
-
-      console.log("Saved notification request:", data);
-      document.getElementById("notifyStatus").innerText = "Saved! You'll be notified if you win!";
-      document.getElementById("notifyForm").reset();
-    });
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log("Service Worker Registered"))
-        .catch(err => console.error("Service Worker registration failed:", err));
-    }
-
-    loadLotteryData();
-    loadEntries();
-    startCountdown();
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
