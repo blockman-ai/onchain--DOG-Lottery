@@ -1,0 +1,11 @@
+{
+  "live_pot_total": 400,
+  "payout_to_winner": 300.0,
+  "rollover_to_next_round": 80.0,
+  "creator_fee": 20.0,
+  "winner": {
+    "txid": "tx002",
+    "amount": 200,
+    "timestamp": "2025-04-03 07:51:54.761409"
+  }
+}
