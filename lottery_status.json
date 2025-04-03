@@ -1,10 +1,10 @@
 {
-  "live_pot_total": 30,
-  "payout_to_winner": 22.5,
-  "rollover_to_next_round": 6.0,
-  "creator_fee": 1.5,
+  "live_pot_total": 5.46e-06,
+  "payout_to_winner": 4.1e-06,
+  "rollover_to_next_round": 1.09e-06,
+  "creator_fee": 2.7e-07,
   "winner": {
-    "txid": "sim-tx002",
-    "amount": 20
+    "txid": "64745a32beb3ed6e4056e9c0622fef53f9163e3813be2f68cd1ceb959f4f1dbc",
+    "amount": 5.46e-06
   }
 }
