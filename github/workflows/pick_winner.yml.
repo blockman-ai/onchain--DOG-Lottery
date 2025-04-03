@@ -1,0 +1,31 @@
+name: Pick Lottery Winner
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs at midnight UTC daily (adjust as needed)
+  workflow_dispatch:
+
+jobs:
+  pick-winner:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install --upgrade pip
+
+      - name: Run pick_winner.py
+        run: python pick_winner.py
+
+      - name: Commit winner (optional)
+        run: |
+          # If you want to update a file with the winner info,
+          # add your commit logic here.
+          echo "Winner selection complete."
