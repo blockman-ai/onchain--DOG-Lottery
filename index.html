@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>$DOG Lottery Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <style>
     body {
       background: #0f0f0f;
@@ -21,7 +22,7 @@
 
     .dashboard {
       max-width: 600px;
-      margin: 0 auto 20px;
+      margin: 20px auto;
       background: #1a1a1a;
       border: 1px solid #333;
       border-radius: 8px;
@@ -29,7 +30,7 @@
     }
 
     .stat {
-      margin-bottom: 12px;
+      margin-bottom: 15px;
     }
 
     .stat label {
@@ -39,45 +40,22 @@
     }
 
     .stat span {
-      font-size: 1.3em;
+      font-size: 1.4em;
       color: #fff;
     }
 
     .countdown {
       text-align: center;
-      margin: 30px 0;
+      margin-top: 30px;
     }
 
     .countdown h3 {
       color: #ffcc00;
-      margin-bottom: 8px;
     }
 
     .countdown span {
       font-size: 1.6em;
       font-weight: bold;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    li {
-      padding: 5px 0;
-    }
-
-    .how-to {
-      background: #1a1a1a;
-      padding: 20px;
-      border: 1px solid #333;
-      border-radius: 8px;
-      max-width: 600px;
-      margin: 0 auto 30px;
-    }
-
-    .how-to h3 {
-      color: #ffcc00;
     }
 
     footer {
@@ -86,6 +64,25 @@
       font-size: 0.85em;
       color: #777;
     }
+
+    button {
+      background: #ffcc00;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 15px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 10px;
+      border-radius: 5px;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -93,11 +90,11 @@
   <h1>$DOG Lottery</h1>
 
   <div class="dashboard">
-    <div class="stat"><label>Live Pot Total:</label> <span id="potTotal">Loading...</span></div>
-    <div class="stat"><label>Winner Payout (75%):</label> <span id="winnerPayout">Loading...</span></div>
-    <div class="stat"><label>Rollover (20%):</label> <span id="rollover">Loading...</span></div>
-    <div class="stat"><label>Creator Fee (5%):</label> <span id="creatorFee">Loading...</span></div>
-    <div class="stat"><label>Last Winner:</label> <span id="winnerTx">Loading...</span></div>
+    <div class="stat"><label>Live Pot Total:</label><span id="potTotal">Loading...</span></div>
+    <div class="stat"><label>Winner Payout (75%):</label><span id="winnerPayout">Loading...</span></div>
+    <div class="stat"><label>Rollover (20%):</label><span id="rollover">Loading...</span></div>
+    <div class="stat"><label>Creator Fee (5%):</label><span id="creatorFee">Loading...</span></div>
+    <div class="stat"><label>Last Winner:</label><span id="winnerTx">Loading...</span></div>
   </div>
 
   <div class="countdown">
@@ -107,14 +104,23 @@
 
   <div class="dashboard">
     <h3 style="color:#ffcc00;">Current Entries</h3>
-    <ul id="entryList"></ul>
+    <ul id="entryList" style="list-style: none; padding: 0;"></ul>
   </div>
 
-  <div class="how-to">
-    <h3>How to Enter</h3>
+  <div class="dashboard">
+    <h3 style="color:#ffcc00;">How to Enter</h3>
     <p>Send any amount of <strong>$DOG</strong> Rune to:</p>
-    <p style="word-break: break-all;"><code>bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</code></p>
-    <p>Each transaction = 1 lottery entry.<br>Winner drawn every 24 hours.</p>
+    <p style="word-break: break-all;">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</p>
+    <button onclick="generateQR()">Show QR Code</button>
+    <div id="qrCode" style="margin-top: 15px;"></div>
+    <p style="margin-top:10px;">Each transaction = 1 lottery entry. Winner drawn every 24h.</p>
+  </div>
+
+  <div class="dashboard">
+    <h3 style="color:#ffcc00;">View My Entry</h3>
+    <input type="text" id="lookupInput" placeholder="Paste your txid or address...">
+    <button onclick="lookupEntry()">Check Entry</button>
+    <div id="entryResult" style="margin-top: 15px;"></div>
   </div>
 
   <footer>
@@ -132,7 +138,7 @@
         document.getElementById("creatorFee").innerText = `${data.creator_fee} $DOG`;
         document.getElementById("winnerTx").innerText = `${data.winner.txid} (${data.winner.amount} $DOG)`;
       } catch (err) {
-        console.error("Failed to load lottery data", err);
+        document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load data.</p>`;
       }
     }
 
@@ -144,13 +150,38 @@
         list.innerHTML = "";
         entries.forEach(entry => {
           const li = document.createElement("li");
+          li.style.padding = "6px 0";
           li.innerText = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
           list.appendChild(li);
         });
-      } catch (err) {
-        console.error("Failed to load entries", err);
-        document.getElementById("entryList").innerHTML = `<li style="color:red;">Failed to load entries.</li>`;
+      } catch {
+        document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
       }
+    }
+
+    async function lookupEntry() {
+      const input = document.getElementById("lookupInput").value.trim().toLowerCase();
+      const box = document.getElementById("entryResult");
+      box.innerHTML = "Searching...";
+      try {
+        const res = await fetch("lottery_entries.json");
+        const entries = await res.json();
+        const match = entries.find(entry => entry.txid.toLowerCase().includes(input));
+        if (match) {
+          box.innerHTML = `<p>Found: <strong>${match.txid}</strong> — ${match.amount} $DOG</p>`;
+        } else {
+          box.innerHTML = `<p style="color:red;">No entry found for "${input}".</p>`;
+        }
+      } catch {
+        box.innerHTML = `<p style="color:red;">Error checking entry.</p>`;
+      }
+    }
+
+    function generateQR() {
+      const address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
+      QRCode.toDataURL(address, function (err, url) {
+        document.getElementById("qrCode").innerHTML = `<img src="${url}" style="max-width:200px;" alt="QR Code">`;
+      });
     }
 
     function startCountdown() {
