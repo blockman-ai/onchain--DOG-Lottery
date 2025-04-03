@@ -25,7 +25,7 @@ for tx in simulated_transactions:
         })
 
 # Save to lottery_entries.json
-entries_output_path = "/mnt/data/lottery_entries.json"
+entries_output_path = "lottery_entries.json"
 with open(entries_output_path, "w") as f:
     json.dump(valid_entries, f, indent=2)
 
