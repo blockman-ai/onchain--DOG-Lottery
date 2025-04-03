@@ -21,7 +21,7 @@
 
     .dashboard {
       max-width: 600px;
-      margin: 0 auto;
+      margin: 0 auto 20px auto;
       background: #1a1a1a;
       border: 1px solid #333;
       border-radius: 8px;
@@ -63,6 +63,19 @@
       font-size: 1.6em;
       font-weight: bold;
     }
+
+    h3 {
+      color: #ffcc00;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      padding: 6px 0;
+    }
   </style>
 </head>
 <body>
@@ -97,9 +110,14 @@
     <span id="countdown">Loading...</span>
   </div>
 
-  <div class="dashboard" style="margin-top: 30px;">
-    <h3 style="color:#ffcc00;">Current Entries</h3>
-    <ul id="entryList" style="list-style: none; padding: 0;"></ul>
+  <div class="dashboard">
+    <h3>Current Entries</h3>
+    <ul id="entryList"></ul>
+  </div>
+
+  <div class="dashboard">
+    <h3>Past Winners</h3>
+    <ul id="winnersList"></ul>
   </div>
 
   <footer>
@@ -119,7 +137,6 @@
         document.getElementById("winnerTx").innerText = `${data.winner.txid} (${data.winner.amount} $DOG)`;
       } catch (err) {
         console.error("Failed to load lottery data", err);
-        document.querySelector(".dashboard").innerHTML = `<p style="color:red;">Failed to load lottery data.</p>`;
       }
     }
 
@@ -127,19 +144,33 @@
       try {
         const res = await fetch("lottery_entries.json");
         const entries = await res.json();
-
         const list = document.getElementById("entryList");
         list.innerHTML = "";
-
         entries.forEach(entry => {
           const li = document.createElement("li");
-          li.style.padding = "6px 0";
-          li.innerText = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
+          li.textContent = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
           list.appendChild(li);
         });
       } catch (err) {
         console.error("Failed to load entries", err);
         document.getElementById("entryList").innerHTML = `<li style="color:red;">Failed to load entries.</li>`;
+      }
+    }
+
+    async function loadWinnerHistory() {
+      try {
+        const res = await fetch("winners_history.json");
+        const winners = await res.json();
+        const list = document.getElementById("winnersList");
+        list.innerHTML = "";
+        winners.forEach(winner => {
+          const li = document.createElement("li");
+          li.textContent = `Round ${winner.round}: ${winner.txid} — ${winner.amount} $DOG on ${winner.date}`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error("Failed to load winners", err);
+        document.getElementById("winnersList").innerHTML = `<li style="color:red;">Failed to load winners.</li>`;
       }
     }
 
@@ -169,11 +200,13 @@
       const timer = setInterval(updateCountdown, 1000);
     }
 
-    // Trigger everything
+    // Initialize all
     loadLotteryData();
     loadEntries();
+    loadWinnerHistory();
     startCountdown();
   </script>
 
 </body>
 </html>
+
