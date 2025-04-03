@@ -3,35 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>$DOG Lottery Dashboard</title>
+  <title>$DOG Lottery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@600&display=swap" rel="stylesheet">
   <style>
-    body {
-      background: #0a0a0a;
-      color: #fefefe;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 20px;
+    :root {
+      --bg: #0a0a0a;
+      --primary: #ffcc00;
+      --accent: #00ffff;
+      --glass: rgba(255, 255, 255, 0.06);
     }
 
-    h1 {
-      text-align: center;
-      color: #ffcc00;
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: white;
+    }
+
+    h1, h3 {
       font-family: 'Orbitron', sans-serif;
-      font-size: 2.4em;
-      margin-bottom: 10px;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 20px;
     }
 
     .dashboard {
-      max-width: 700px;
+      max-width: 680px;
       margin: 20px auto;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
+      background: var(--glass);
+      border: 1px solid #333;
+      border-radius: 12px;
       padding: 25px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 0 12px rgba(0, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.04);
     }
 
     .stat {
@@ -39,15 +45,61 @@
     }
 
     .stat label {
-      font-weight: bold;
+      color: #aaa;
       display: block;
-      color: #00ffff;
+      font-size: 0.9em;
       margin-bottom: 5px;
     }
 
     .stat span {
-      font-size: 1.4em;
-      color: #fff;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: white;
+    }
+
+    ul {
+      padding-left: 0;
+      list-style: none;
+    }
+
+    li {
+      padding: 6px 0;
+      border-bottom: 1px solid #222;
+    }
+
+    .countdown span {
+      font-size: 1.5em;
+      color: var(--accent);
+      display: block;
+      text-align: center;
+    }
+
+    button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 15px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      box-shadow: 0 0 10px var(--accent);
+      background: #00dddd;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0 12px;
+      border-radius: 6px;
+      border: none;
+      background: #111;
+      color: white;
     }
 
     footer {
@@ -57,88 +109,4 @@
       color: #666;
     }
 
-    .countdown {
-      text-align: center;
-      margin-top: 30px;
-    }
-
-    .countdown h3 {
-      color: #ffcc00;
-      font-family: 'Orbitron', sans-serif;
-    }
-
-    .countdown span {
-      font-size: 1.6em;
-      font-weight: bold;
-    }
-
-    button {
-      background: #ffcc00;
-      color: #0a0a0a;
-      border: none;
-      border-radius: 6px;
-      padding: 12px 18px;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 10px;
-      transition: all 0.3s ease;
-      font-family: 'Orbitron', sans-serif;
-    }
-
-    button:hover {
-      box-shadow: 0 0 8px #ffcc00, 0 0 15px #00ffff;
-      background-color: #ffee33;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 5px 0 10px;
-      border-radius: 8px;
-      border: none;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-    }
-
-    ul {
-      padding-left: 0;
-      list-style: none;
-    }
-
-    li {
-      margin-bottom: 6px;
-      color: #ddd;
-    }
-
-    p {
-      color: #ccc;
-    }
-  </style>
-</head>
-<body>
-
-  <h1>$DOG Lottery</h1>
-
-  <div class="dashboard">
-    <div class="stat"><label>Live Pot Total:</label><span id="potTotal">Loading...</span></div>
-    <div class="stat"><label>Winner Payout (75%):</label><span id="winnerPayout">Loading...</span></div>
-    <div class="stat"><label>Rollover (20%):</label><span id="rollover">Loading...</span></div>
-    <div class="stat"><label>Creator Fee (5%):</label><span id="creatorFee">Loading...</span></div>
-    <div class="stat"><label>Last Winner:</label><span id="winnerTx">Loading...</span></div>
-  </div>
-
-  <div class="countdown">
-    <h3>Next Round Starts In:</h3>
-    <span id="countdown">Loading...</span>
-  </div>
-
-  <!-- Your other sections like How to Enter, QR code, View Entry, Notify, etc go here -->
-
-  <footer>
-    Powered by $DOG on Bitcoin | Updated every 24h via GitHub Actions
-  </footer>
-
-</body>
-</html>
+    #
