@@ -19,7 +19,7 @@
       font-family: 'Orbitron', sans-serif;
       text-align: center;
       color: #ffcc00;
-      font-size: 2.2em;
+      font-size: 2em;
       text-shadow: 0 0 8px #ffcc00;
       margin-bottom: 20px;
     }
@@ -61,12 +61,13 @@
       color: #000;
       border: none;
       border-radius: 6px;
-      padding: 10px 16px;
+      padding: 12px;
       font-weight: bold;
       cursor: pointer;
       width: 100%;
       transition: 0.3s ease;
       box-shadow: 0 0 10px #00ffff80;
+      margin-top: 10px;
     }
 
     button:hover {
@@ -76,8 +77,8 @@
 
     input {
       width: 100%;
-      padding: 10px;
-      margin: 6px 0 12px;
+      padding: 12px;
+      margin: 8px 0 16px;
       border-radius: 6px;
       border: 1px solid #444;
       background: #111;
@@ -100,10 +101,39 @@
       color: #00ffff;
     }
 
+    #qrCode img {
+      display: block;
+      margin: 10px auto;
+      width: 100%;
+      max-width: 240px;
+    }
+
     footer {
       color: #777;
       font-size: 0.85em;
       margin-top: 50px;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.6em;
+      }
+
+      .dashboard {
+        padding: 16px;
+      }
+
+      input, button {
+        font-size: 1em;
+      }
+
+      .stat span {
+        font-size: 1.1em;
+      }
+
+      #countdown {
+        font-size: 1.2em;
+      }
     }
   </style>
 </head>
@@ -134,8 +164,8 @@
     <p>Send any amount of <strong>$DOG</strong> Rune to:</p>
     <p style="word-break: break-all; color:#ffcc00;">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</p>
     <button onclick="generateQR()">Show QR Code</button>
-    <div id="qrCode" style="margin-top: 15px;"></div>
-    <p style="margin-top:10px;">Each transaction = 1 lottery entry. Winner drawn daily.</p>
+    <div id="qrCode"></div>
+    <p style="margin-top:10px;">Each transaction = 1 entry. Winner drawn daily.</p>
   </div>
 
   <div class="dashboard">
@@ -147,7 +177,7 @@
 
   <div class="dashboard">
     <h3>Get Notified</h3>
-    <p>Enter your email or X (Twitter) handle to get updates:</p>
+    <p>Enter email or X (Twitter) + txid/address:</p>
     <form id="notifyForm">
       <input type="text" id="txInput" placeholder="Your txid or address" required />
       <input type="text" id="emailInput" placeholder="Your email or @handle" required />
@@ -158,7 +188,7 @@
   </div>
 
   <footer>
-    Powered by $DOG on Bitcoin | Auto-updated daily via GitHub Actions
+    Powered by $DOG on Bitcoin | Auto-updated via GitHub Actions
   </footer>
 
   <script>
@@ -211,7 +241,7 @@
     function generateQR() {
       const address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
       QRCode.toDataURL(address, function (err, url) {
-        document.getElementById("qrCode").innerHTML = `<img src="${url}" style="max-width:200px;">`;
+        document.getElementById("qrCode").innerHTML = `<img src="${url}" alt="QR Code">`;
       });
     }
 
@@ -235,7 +265,7 @@
       const timer = setInterval(updateCountdown, 1000);
     }
 
-    document.getElementById("notifyForm").addEventListener("submit", async function (e) {
+    document.getElementById("notifyForm").addEventListener("submit", function (e) {
       e.preventDefault();
       const tx = document.getElementById("txInput").value.trim();
       const contact = document.getElementById("emailInput").value.trim();
@@ -253,7 +283,6 @@
       document.getElementById("notifyForm").reset();
     });
 
-    // Init
     loadLotteryData();
     loadEntries();
     startCountdown();
