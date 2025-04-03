@@ -1,41 +1,61 @@
 import requests
 import json
 from datetime import datetime
+import random
 
-# 1. CONFIG
-DOG_ADDRESS = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4"
-MEMPOOL_API = f"https://mempool.space/api/address/{DOG_ADDRESS}/txs"
-OUTPUT_PATH = "lottery_entries.json"
+# Constants
+DOG_RUNE_ID = "618ffb4e23e19566c7567841187a1c424dfd775e4f8cb633a7a3d4836784835fi0"
+LOTTERY_ADDRESS = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4"
+CREATOR_ADDRESS = "bc1prhcdy4ytncv8xgq0xwtqg0gfk2t38asddq3ex7xxa43dxhrfhkhsn6yhk9"
 
-# 2. FETCH TXs
+# Mempool API to get transactions for the address (confirmed + mempool)
+API_URL = f"https://mempool.space/api/address/{LOTTERY_ADDRESS}/txs"
+
 try:
-    res = requests.get(MEMPOOL_API)
-    res.raise_for_status()
-    txs = res.json()
+    response = requests.get(API_URL)
+    response.raise_for_status()
+    txs = response.json()
+
+    # Simulate filtering by Rune ID (we'll assume every tx here is a $DOG Rune transfer)
+    # In production: you would verify rune ID and amount with ord or Hiro API
+    entries = []
+    for tx in txs:
+        txid = tx["txid"]
+        # Simulated $DOG amount assumption
+        simulated_amount = random.randint(5, 100)
+        entries.append({
+            "txid": txid,
+            "amount": simulated_amount,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+
+    # Calculate pot
+    total_pot = sum(tx["amount"] for tx in entries)
+    winner = random.choice(entries) if entries else {"txid": "none", "amount": 0}
+
+    payout = {
+        "live_pot_total": total_pot,
+        "payout_to_winner": round(total_pot * 0.75, 2),
+        "rollover_to_next_round": round(total_pot * 0.20, 2),
+        "creator_fee": round(total_pot * 0.05, 2),
+        "winner": winner,
+        "creator_address": CREATOR_ADDRESS
+    }
+
+    # Save to JSON files
+    with open("/mnt/data/lottery_entries.json", "w") as f:
+        json.dump(entries, f, indent=2)
+
+    with open("/mnt/data/lottery_status.json", "w") as f:
+        json.dump(payout, f, indent=2)
+
+    result = {
+        "total_entries": len(entries),
+        "winner": winner,
+        "lottery_status": payout
+    }
+
 except Exception as e:
-    print("Error fetching mempool data:", e)
-    txs = []
+    result = {"error": str(e)}
 
-# 3. EXTRACT ENTRIES (simulated for now)
-entries = []
-for tx in txs:
-    txid = tx["txid"]
-    timestamp = datetime.utcfromtimestamp(tx["status"]["block_time"]).isoformat() if tx["status"]["confirmed"] else datetime.utcnow().isoformat()
-    for vout in tx.get("vout", []):
-        if vout["scriptpubkey_address"] == DOG_ADDRESS and vout["value"] > 500:
-            entries.append({
-                "txid": txid,
-                "amount": round(vout["value"] / 1000, 2),  # Simulate DOG = value / 1000 sats
-                "timestamp": timestamp
-            })
-
-# 4. FALLBACK FOR TESTING
-if not entries:
-    entries = [
-        {"txid": "sim-tx001", "amount": 10, "timestamp": datetime.utcnow().isoformat()},
-        {"txid": "sim-tx002", "amount": 20, "timestamp": datetime.utcnow().isoformat()}
-    ]
-
-# 5. SAVE
-with open(OUTPUT_PATH, "w") as f:
-    json.dump(entries, f, indent=2)
+result
