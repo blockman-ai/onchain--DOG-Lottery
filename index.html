@@ -62,6 +62,7 @@
     .stat span {
       font-size: 1.4em;
       color: #fff;
+      word-break: break-word;
     }
 
     .countdown {
@@ -121,11 +122,26 @@
   <h1>$DOG Lottery</h1>
 
   <div class="dashboard">
-    <div class="stat"><label>Live Pot Total:</label><span id="potTotal">Loading...</span></div>
-    <div class="stat"><label>Winner Payout (75%):</label><span id="winnerPayout">Loading...</span></div>
-    <div class="stat"><label>Rollover (20%):</label><span id="rollover">Loading...</span></div>
-    <div class="stat"><label>Creator Fee (5%):</label><span id="creatorFee">Loading...</span></div>
-    <div class="stat"><label>Last Winner:</label><span id="winnerTx">Loading...</span></div>
+    <div class="stat">
+      <label>Live Pot Total:</label>
+      <span id="potTotal">Loading...</span>
+    </div>
+    <div class="stat">
+      <label>Winner Payout (75%):</label>
+      <span id="winnerPayout">Loading...</span>
+    </div>
+    <div class="stat">
+      <label>Rollover (20%):</label>
+      <span id="rollover">Loading...</span>
+    </div>
+    <div class="stat">
+      <label>Creator Fee (5%):</label>
+      <span id="creatorFee">Loading...</span>
+    </div>
+    <div class="stat">
+      <label>Last Winner:</label>
+      <span id="winnerTx" style="font-family: monospace; font-size: 0.95em;">Loading...</span>
+    </div>
   </div>
 
   <div class="countdown">
@@ -194,6 +210,7 @@
         entries.forEach(entry => {
           const li = document.createElement("li");
           li.style.padding = "6px 0";
+          li.style.wordBreak = "break-word";
           li.innerText = `Tx: ${entry.txid} — ${entry.amount} $DOG`;
           list.appendChild(li);
         });
@@ -276,14 +293,12 @@
       document.getElementById("notifyForm").reset();
     });
 
-    // Service Worker registration for PWA
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js')
         .then(() => console.log("Service Worker Registered"))
         .catch(err => console.error("Service Worker registration failed:", err));
     }
 
-    // Init
     loadLotteryData();
     loadEntries();
     startCountdown();
