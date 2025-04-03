@@ -1,37 +1,41 @@
-import json
 import requests
+import json
 from datetime import datetime
 
-# Your $DOG Rune receiving address
-lottery_address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4"
+# 1. CONFIG
+DOG_ADDRESS = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4"
+MEMPOOL_API = f"https://mempool.space/api/address/{DOG_ADDRESS}/txs"
+OUTPUT_PATH = "lottery_entries.json"
 
-# Mempool API endpoint (change if using another instance)
-MEMPOOL_API = f"https://mempool.space/api/address/{lottery_address}/txs"
+# 2. FETCH TXs
+try:
+    res = requests.get(MEMPOOL_API)
+    res.raise_for_status()
+    txs = res.json()
+except Exception as e:
+    print("Error fetching mempool data:", e)
+    txs = []
 
-# Fetch recent transactions to the lottery address
-response = requests.get(MEMPOOL_API)
-if response.status_code != 200:
-    raise Exception("Failed to fetch transactions from Mempool API")
-
-txs = response.json()
+# 3. EXTRACT ENTRIES (simulated for now)
 entries = []
-
-# Loop through transactions and extract Rune-relevant ones (simulate for now)
 for tx in txs:
     txid = tx["txid"]
     timestamp = datetime.utcfromtimestamp(tx["status"]["block_time"]).isoformat() if tx["status"]["confirmed"] else datetime.utcnow().isoformat()
+    for vout in tx.get("vout", []):
+        if vout["scriptpubkey_address"] == DOG_ADDRESS and vout["value"] > 500:
+            entries.append({
+                "txid": txid,
+                "amount": round(vout["value"] / 1000, 2),  # Simulate DOG = value / 1000 sats
+                "timestamp": timestamp
+            })
 
-    # Simulated: Extracting $DOG Rune amount from transaction outputs (normally you'd need a Rune indexer)
-    amount = 10  # <-- Placeholder for actual Rune detection logic
+# 4. FALLBACK FOR TESTING
+if not entries:
+    entries = [
+        {"txid": "sim-tx001", "amount": 10, "timestamp": datetime.utcnow().isoformat()},
+        {"txid": "sim-tx002", "amount": 20, "timestamp": datetime.utcnow().isoformat()}
+    ]
 
-    entries.append({
-        "txid": txid,
-        "amount": amount,
-        "timestamp": timestamp
-    })
-
-# Save as JSON
-with open("lottery_entries.json", "w") as f:
+# 5. SAVE
+with open(OUTPUT_PATH, "w") as f:
     json.dump(entries, f, indent=2)
-
-print(f"Updated lottery_entries.json with {len(entries)} entries.")
