@@ -9,6 +9,10 @@ API_URL = f"https://open-api.unisat.io/v1/indexer/address/{LOTTERY_ADDRESS}/rune
 headers = {"accept": "application/json"}
 entries = []
 
+# Convert raw Rune amount to DOG (9 decimals)
+def convert_rune_amount(raw_amount: str) -> float:
+    return float(Decimal(raw_amount) / Decimal(1e9))
+
 try:
     res = requests.get(API_URL, headers=headers)
     txs = res.json()["data"]["transactions"]
@@ -18,7 +22,7 @@ try:
             if t["tick"] == "DOG" and t["to"] == LOTTERY_ADDRESS:
                 entries.append({
                     "txid": tx["txid"],
-                    "amount": float(Decimal(t["amount"]) / Decimal(1e9)),
+                    "amount": round(convert_rune_amount(t["amount"]), 4),  # 5000.0000 DOG
                     "timestamp": datetime.utcfromtimestamp(tx.get("blocktime", datetime.utcnow().timestamp())).isoformat()
                 })
 
@@ -27,9 +31,9 @@ try:
 
     status = {
         "live_pot_total": total,
-        "payout_to_winner": round(total * 0.75, 9),
-        "rollover_to_next_round": round(total * 0.20, 9),
-        "creator_fee": round(total * 0.05, 9),
+        "payout_to_winner": round(total * 0.75, 4),
+        "rollover_to_next_round": round(total * 0.20, 4),
+        "creator_fee": round(total * 0.05, 4),
         "winner": winner,
         "creator_address": CREATOR_ADDRESS
     }
