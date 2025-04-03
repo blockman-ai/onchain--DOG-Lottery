@@ -28,14 +28,14 @@ lottery_status = {
     }
 }
 
+# Correct file paths (write to root of repo)
+entries_path = "lottery_entries.json"
+status_path = "lottery_status.json"
+
 # Save current entries
-entries_path = "/mnt/data/lottery_entries.json"
 with open(entries_path, "w") as f:
     json.dump(transactions, f, indent=2)
 
 # Save current status
-entries_path = "/mnt/data/lottery_entries.json"
 with open(status_path, "w") as f:
     json.dump(lottery_status, f, indent=2)
-
-entries_path, status_path
