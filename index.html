@@ -3,141 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>$DOG Rune Lottery</title>
+  <title>$DOG Lottery Dashboard</title>
   <style>
     body {
-      background: #111;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #fefefe;
+      font-family: "Segoe UI", sans-serif;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
-    header {
-      text-align: center;
-      padding: 40px 20px;
-      background: #000;
-    }
+
     h1 {
+      text-align: center;
       color: #ffcc00;
-      margin-bottom: 0;
+      margin-bottom: 10px;
     }
-    .container {
+
+    .dashboard {
       max-width: 600px;
-      margin: 30px auto;
-      padding: 0 20px;
-    }
-    .section {
+      margin: 0 auto;
       background: #1a1a1a;
       border: 1px solid #333;
-      padding: 20px;
       border-radius: 8px;
-      margin-bottom: 20px;
+      padding: 20px;
     }
-    .label {
-      color: #aaa;
-      margin-bottom: 5px;
+
+    .stat {
+      margin-bottom: 15px;
     }
-    .value {
-      font-size: 1.5em;
+
+    .stat label {
       font-weight: bold;
-      color: #ffcc00;
-    }
-    ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    li {
-      padding: 5px 0;
-      border-bottom: 1px solid #333;
-    }
-    .join-btn {
       display: block;
-      text-align: center;
-      margin-top: 20px;
-      background: #ffcc00;
-      color: #111;
-      padding: 12px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
+      color: #aaa;
     }
-    .join-btn:hover {
-      background: #e6b800;
+
+    .stat span {
+      font-size: 1.4em;
+      color: #fff;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.85em;
+      color: #777;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>$DOG Lottery</h1>
-    <p>A simple 24hr on-chain lottery for the DOG community.</p>
-  </header>
-
-  <div class="container">
-    <div class="section">
-      <div class="label">Current Pot</div>
-      <div class="value" id="currentPot">Loading...</div>
+  <h1>$DOG Lottery</h1>
+  <div class="dashboard">
+    <div class="stat">
+      <label>Live Pot Total:</label>
+      <span id="potTotal">Loading...</span>
     </div>
-
-    <div class="section">
-      <div class="label">Time Remaining</div>
-      <div class="value" id="countdown">Loading...</div>
+    <div class="stat">
+      <label>Winner Payout (75%):</label>
+      <span id="winnerPayout">Loading...</span>
     </div>
-
-    <div class="section">
-      <div class="label">Entries</div>
-      <ul id="entriesList">
-        <li>Loading...</li>
-      </ul>
+    <div class="stat">
+      <label>Rollover to Next Round (20%):</label>
+      <span id="rollover">Loading...</span>
     </div>
-
-    <div class="section">
-      <div class="label">Past Winners</div>
-      <ul id="winnersList">
-        <li>Loading...</li>
-      </ul>
+    <div class="stat">
+      <label>Creator Fee (5%):</label>
+      <span id="creatorFee">Loading...</span>
     </div>
-
-    <a class="join-btn" href="https://unisat.io/send?address=YOUR_DOG_LOTTERY_ADDRESS" target="_blank">Join Lottery</a>
   </div>
 
+  <footer>
+    Powered by $DOG on Bitcoin | Updated every 24h via GitHub Actions
+  </footer>
+
   <script>
-    // Replace with your backend API or static JSON paths
-    const countdownTarget = new Date().getTime() + 1000 * 60 * 60 * 24;
+    async function loadLotteryData() {
+      try {
+        const res = await fetch("lottery_status.json");
+        const data = await res.json();
 
-    function updateCountdown() {
-      const now = new Date().getTime();
-      const distance = countdownTarget - now;
+        document.getElementById("potTotal").innerText = `${data.live_pot_total} $DOG`;
+        document.getElementById("winnerPayout").innerText = `${data.payout_to_winner} $DOG`;
+        document.getElementById("rollover").innerText = `${data.rollover_to_next_round} $DOG`;
+        document.getElementById("creatorFee").innerText = `${data.creator_fee} $DOG`;
 
-      if (distance <= 0) {
-        document.getElementById("countdown").innerText = "Drawing now...";
-        return;
+      } catch (err) {
+        console.error("Failed to load lottery data", err);
       }
-
-      const hours = Math.floor(distance / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
     }
 
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
-
-    // Dummy data (to be replaced with fetch from GitHub Actions script)
-    document.getElementById("currentPot").innerText = "312,000 $DOG";
-
-    document.getElementById("entriesList").innerHTML = `
-      <li>bc1...x7p4</li>
-      <li>bc1...jvkl</li>
-      <li>bc1...9flk</li>
-    `;
-
-    document.getElementById("winnersList").innerHTML = `
-      <li>bc1...x7p4 won 234,000 $DOG</li>
-      <li>bc1...kz82 won 198,000 $DOG</li>
-    `;
+    loadLotteryData();
   </script>
-
 </body>
 </html>
