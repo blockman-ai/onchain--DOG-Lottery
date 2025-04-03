@@ -162,6 +162,26 @@
       }
     }
 
+    function submitNotification() {
+  const input = document.getElementById("notifyInput").value.trim();
+  const status = document.getElementById("notifyStatus");
+
+  if (!input || (!input.includes("@") && !input.startsWith("@"))) {
+    status.innerHTML = `<p style="color:red;">Please enter a valid email or @handle.</p>`;
+    return;
+  }
+
+  const entry = { contact: input, timestamp: new Date().toISOString() };
+
+  // Store locally or send to server/GitHub (future upgrade)
+  let stored = JSON.parse(localStorage.getItem("dogNotifications") || "[]");
+  stored.push(entry);
+  localStorage.setItem("dogNotifications", JSON.stringify(stored));
+
+  status.innerHTML = `<p style="color:lightgreen;">You're subscribed for notifications!</p>`;
+  document.getElementById("notifyInput").value = "";
+}
+
     async function loadEntries() {
       try {
         const res = await fetch("lottery_entries.json");
