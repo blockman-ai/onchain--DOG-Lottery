@@ -241,6 +241,79 @@
     loadLotteryData();
     loadEntries();
     startCountdown();
-  </script>
+  <script>
+  const formatDOG = (n) => parseFloat(n).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 4
+  });
+
+  async function loadLotteryData() {
+    try {
+      const res = await fetch("lottery_status.json");
+      const data = await res.json();
+
+      document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
+      document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
+      document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
+      document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
+      document.getElementById("winnerTx").innerHTML = `
+        <div class="break-hash" style="color: #00ffff;">${data.winner.txid}</div>
+        <div style="color:#999;">(${formatDOG(data.winner.amount)} $DOG)</div>
+      `;
+    } catch (err) {
+      document.getElementById("winnerTx").innerHTML = `<div style="color:red;">Failed to load data</div>`;
+    }
+  }
+
+  async function loadEntries() {
+    try {
+      const res = await fetch("lottery_entries.json");
+      const entries = await res.json();
+      const list = document.getElementById("entryList");
+      list.innerHTML = "";
+      entries.forEach(entry => {
+        const li = document.createElement("li");
+        li.style.padding = "6px 0";
+        li.innerHTML = `
+          <div class="break-hash">Tx: ${entry.txid}</div>
+          <div style="color:#ccc;">— ${formatDOG(entry.amount)} $DOG</div>
+        `;
+        list.appendChild(li);
+      });
+    } catch {
+      document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
+    }
+  }
+
+  function startCountdown() {
+    const now = new Date().getTime();
+    const nextRound = new Date();
+    nextRound.setUTCHours(0, 0, 0, 0);
+    if (now > nextRound.getTime()) {
+      nextRound.setUTCDate(nextRound.getUTCDate() + 1);
+    }
+
+    function updateCountdown() {
+      const distance = nextRound - new Date().getTime();
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
+      if (distance < 0) {
+        clearInterval(timer);
+        document.getElementById("countdown").innerText = "Refreshing...";
+        location.reload();
+      }
+    }
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+  }
+
+  loadLotteryData();
+  loadEntries();
+  startCountdown();
+</script>
+
 </body>
 </html>
