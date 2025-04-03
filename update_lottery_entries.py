@@ -9,7 +9,6 @@ API_URL = f"https://open-api.unisat.io/v1/indexer/address/{LOTTERY_ADDRESS}/rune
 headers = {"accept": "application/json"}
 entries = []
 
-# Convert raw Rune amount to DOG (9 decimals)
 def convert_rune_amount(raw_amount: str) -> float:
     return float(Decimal(raw_amount) / Decimal(1e9))
 
@@ -22,7 +21,7 @@ try:
             if t["tick"] == "DOG" and t["to"] == LOTTERY_ADDRESS:
                 entries.append({
                     "txid": tx["txid"],
-                    "amount": round(convert_rune_amount(t["amount"]), 4),  # 5000.0000 DOG
+                    "amount": round(convert_rune_amount(t["amount"]), 4),
                     "timestamp": datetime.utcfromtimestamp(tx.get("blocktime", datetime.utcnow().timestamp())).isoformat()
                 })
 
