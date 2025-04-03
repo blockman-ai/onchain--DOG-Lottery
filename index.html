@@ -205,129 +205,127 @@
   </footer>
 
   <script>
-    async function loadLotteryData() {
-      try {
-        const res = await fetch("lottery_status.json");
-        const data = await res.json();
-        const formatDOG = (n) => parseFloat(n).toFixed(8).replace(/\.?0+$/, '');
-        document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
-        document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
-        document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
-        document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
-        document.getElementById("winnerTx").innerHTML = `
-          <div class="break-hash">${data.winner.txid}</div>
-          <div style="color:#aaa;">(${formatDOG(data.winner.amount)} $DOG)</div>
+  async function loadLotteryData() {
+    try {
+      const res = await fetch("lottery_status.json");
+      const data = await res.json();
+      const formatDOG = (n) => parseFloat(n).toFixed(8).replace(/\.?0+$/, '');
+      document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
+      document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
+      document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
+      document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
+      document.getElementById("winnerTx").innerHTML = `
+        <div class="break-hash">${data.winner.txid}</div>
+        <div style="color:#aaa;">(${formatDOG(data.winner.amount)} $DOG)</div>
+      `;
+    } catch (err) {
+      document.getElementById("winnerTx").innerHTML = `
+        <div style="color:red;">Failed to load winner data</div>
+      `;
+    }
+  }
+
+  async function loadEntries() {
+    try {
+      const res = await fetch("lottery_entries.json");
+      const entries = await res.json();
+      const list = document.getElementById("entryList");
+      list.innerHTML = "";
+      entries.forEach(entry => {
+        const li = document.createElement("li");
+        li.style.padding = "6px 0";
+        li.innerHTML = `
+          <div class="break-hash">Tx: ${entry.txid}</div>
+          <div style="color:#ccc;">— ${entry.amount} $DOG</div>
         `;
-      } catch (err) {
-        document.getElementById("winnerTx").innerHTML = `
-  <div class="break-hash">${data.winner.txid}</div>
-  <div style="color:#aaa;">(${formatDOG(data.winner.amount)} $DOG)</div>
-`;
-    }
-
-    async function loadEntries() {
-      try {
-        const res = await fetch("lottery_entries.json");
-        const entries = await res.json();
-        const list = document.getElementById("entryList");
-        list.innerHTML = "";
-        entries.forEach(entry => {
-          const li = document.createElement("li");
-          li.style.padding = "6px 0";
-          li.innerHTML = `
-            <div class="break-hash">Tx: ${entry.txid}</div>
-            <div style="color:#ccc;">— ${entry.amount} $DOG</div>
-          `;
-          list.appendChild(li);
-        });
-      } catch {
-        document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
-      }
-    }
-
-    function generateQR() {
-      const address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
-      QRCode.toDataURL(address, function (err, url) {
-        document.getElementById("qrCode").innerHTML = `<img src="${url}" style="max-width:200px;" alt="QR Code">`;
+        list.appendChild(li);
       });
+    } catch {
+      document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
     }
+  }
 
-    async function lookupEntry() {
-      const input = document.getElementById("lookupInput").value.trim().toLowerCase();
-      const box = document.getElementById("entryResult");
-      box.innerHTML = "Searching...";
-      try {
-        const res = await fetch("lottery_entries.json");
-        const entries = await res.json();
-        const match = entries.find(entry =>
-          entry.txid.toLowerCase().includes(input)
-        );
-        if (match) {
-          box.innerHTML = `<p class="break-hash">Found: <strong>${match.txid}</strong> — ${match.amount} $DOG</p>`;
-        } else {
-          box.innerHTML = `<p style="color:red;">No entry found for "${input}".</p>`;
-        }
-      } catch {
-        box.innerHTML = `<p style="color:red;">Error checking entry.</p>`;
-      }
-    }
-
-    function startCountdown() {
-      const now = new Date().getTime();
-      const nextRound = new Date();
-      nextRound.setUTCHours(0, 0, 0, 0);
-      if (now > nextRound.getTime()) {
-        nextRound.setUTCDate(nextRound.getUTCDate() + 1);
-      }
-
-      function updateCountdown() {
-        const distance = nextRound - new Date().getTime();
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
-        if (distance < 0) {
-          clearInterval(timer);
-          document.getElementById("countdown").innerText = "Refreshing...";
-          location.reload();
-        }
-      }
-
-      updateCountdown();
-      const timer = setInterval(updateCountdown, 1000);
-    }
-
-    document.getElementById("notifyForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const tx = document.getElementById("txInput").value.trim();
-      const contact = document.getElementById("emailInput").value.trim();
-      const consent = document.getElementById("consentCheckbox").checked;
-
-      if (!tx || !contact || !consent) {
-        document.getElementById("notifyStatus").innerText = "Please complete all fields.";
-        return;
-      }
-
-      const data = {
-        tx_or_address: tx,
-        contact_info: contact,
-        timestamp: new Date().toISOString()
-      };
-
-      console.log("Saved notification request:", data);
-      document.getElementById("notifyStatus").innerText = "Saved! You'll be notified if you win!";
-      document.getElementById("notifyForm").reset();
+  function generateQR() {
+    const address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
+    QRCode.toDataURL(address, function (err, url) {
+      document.getElementById("qrCode").innerHTML = `<img src="${url}" style="max-width:200px;" alt="QR Code">`;
     });
+  }
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log("Service Worker Registered"))
-        .catch(err => console.error("Service Worker registration failed:", err));
+  async function lookupEntry() {
+    const input = document.getElementById("lookupInput").value.trim().toLowerCase();
+    const box = document.getElementById("entryResult");
+    box.innerHTML = "Searching...";
+    try {
+      const res = await fetch("lottery_entries.json");
+      const entries = await res.json();
+      const match = entries.find(entry =>
+        entry.txid.toLowerCase().includes(input)
+      );
+      if (match) {
+        box.innerHTML = `<p class="break-hash">Found: <strong>${match.txid}</strong> — ${match.amount} $DOG</p>`;
+      } else {
+        box.innerHTML = `<p style="color:red;">No entry found for "${input}".</p>`;
+      }
+    } catch {
+      box.innerHTML = `<p style="color:red;">Error checking entry.</p>`;
+    }
+  }
+
+  function startCountdown() {
+    const now = new Date().getTime();
+    const nextRound = new Date();
+    nextRound.setUTCHours(0, 0, 0, 0);
+    if (now > nextRound.getTime()) {
+      nextRound.setUTCDate(nextRound.getUTCDate() + 1);
     }
 
-    loadLotteryData();
-    loadEntries();
-    startCountdown();
-  </script>
-</body>
-</html>
+    function updateCountdown() {
+      const distance = nextRound - new Date().getTime();
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
+      if (distance < 0) {
+        clearInterval(timer);
+        document.getElementById("countdown").innerText = "Refreshing...";
+        location.reload();
+      }
+    }
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+  }
+
+  document.getElementById("notifyForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const tx = document.getElementById("txInput").value.trim();
+    const contact = document.getElementById("emailInput").value.trim();
+    const consent = document.getElementById("consentCheckbox").checked;
+
+    if (!tx || !contact || !consent) {
+      document.getElementById("notifyStatus").innerText = "Please complete all fields.";
+      return;
+    }
+
+    const data = {
+      tx_or_address: tx,
+      contact_info: contact,
+      timestamp: new Date().toISOString()
+    };
+
+    console.log("Saved notification request:", data);
+    document.getElementById("notifyStatus").innerText = "Saved! You'll be notified if you win!";
+    document.getElementById("notifyForm").reset();
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log("Service Worker Registered"))
+      .catch(err => console.error("Service Worker registration failed:", err));
+  }
+
+  loadLotteryData();
+  loadEntries();
+  startCountdown();
+</script>
