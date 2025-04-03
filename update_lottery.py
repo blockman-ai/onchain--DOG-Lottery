@@ -1,61 +1,44 @@
-import requests
-import json
+import requests, json, random
 from datetime import datetime
-import random
+from decimal import Decimal
 
-# Constants
-DOG_RUNE_ID = "618ffb4e23e19566c7567841187a1c424dfd775e4f8cb633a7a3d4836784835fi0"
 LOTTERY_ADDRESS = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4"
 CREATOR_ADDRESS = "bc1prhcdy4ytncv8xgq0xwtqg0gfk2t38asddq3ex7xxa43dxhrfhkhsn6yhk9"
+API_URL = f"https://open-api.unisat.io/v1/indexer/address/{LOTTERY_ADDRESS}/rune/txs"
 
-# Mempool API to get transactions for the address (confirmed + mempool)
-API_URL = f"https://mempool.space/api/address/{LOTTERY_ADDRESS}/txs"
+headers = {"accept": "application/json"}
+entries = []
 
 try:
-    response = requests.get(API_URL)
-    response.raise_for_status()
-    txs = response.json()
+    res = requests.get(API_URL, headers=headers)
+    txs = res.json()["data"]["transactions"]
 
-    # Simulate filtering by Rune ID (we'll assume every tx here is a $DOG Rune transfer)
-    # In production: you would verify rune ID and amount with ord or Hiro API
-    entries = []
     for tx in txs:
-        txid = tx["txid"]
-        # Simulated $DOG amount assumption
-        simulated_amount = random.randint(5, 100)
-        entries.append({
-            "txid": txid,
-            "amount": simulated_amount,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        for t in tx.get("transfers", []):
+            if t["tick"] == "DOG" and t["to"] == LOTTERY_ADDRESS:
+                entries.append({
+                    "txid": tx["txid"],
+                    "amount": float(Decimal(t["amount"]) / Decimal(1e9)),
+                    "timestamp": datetime.utcfromtimestamp(tx.get("blocktime", datetime.utcnow().timestamp())).isoformat()
+                })
 
-    # Calculate pot
-    total_pot = sum(tx["amount"] for tx in entries)
+    total = sum(e["amount"] for e in entries)
     winner = random.choice(entries) if entries else {"txid": "none", "amount": 0}
 
-    payout = {
-        "live_pot_total": total_pot,
-        "payout_to_winner": round(total_pot * 0.75, 2),
-        "rollover_to_next_round": round(total_pot * 0.20, 2),
-        "creator_fee": round(total_pot * 0.05, 2),
+    status = {
+        "live_pot_total": total,
+        "payout_to_winner": round(total * 0.75, 9),
+        "rollover_to_next_round": round(total * 0.20, 9),
+        "creator_fee": round(total * 0.05, 9),
         "winner": winner,
         "creator_address": CREATOR_ADDRESS
     }
 
-    # Save to JSON files
-    with open("/mnt/data/lottery_entries.json", "w") as f:
+    with open("lottery_entries.json", "w") as f:
         json.dump(entries, f, indent=2)
 
-    with open("/mnt/data/lottery_status.json", "w") as f:
-        json.dump(payout, f, indent=2)
-
-    result = {
-        "total_entries": len(entries),
-        "winner": winner,
-        "lottery_status": payout
-    }
+    with open("lottery_status.json", "w") as f:
+        json.dump(status, f, indent=2)
 
 except Exception as e:
-    result = {"error": str(e)}
-
-result
+    print("Error:", e)
