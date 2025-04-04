@@ -1,237 +1,409 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
   <title>$DOG Lottery Dashboard</title>
+
   <meta name="theme-color" content="#ff4d4d">
+
   <link rel="icon" href="icon-192.png">
+
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter&display=swap" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
+
     body {
-      background: #121212;
+
+      background: #0b0b0b;
+
       color: #e0e0e0;
+
       font-family: 'Inter', sans-serif;
+
       margin: 0;
+
       padding: 20px;
+
     }
+
     h1 {
+
       text-align: center;
+
       font-family: 'Orbitron', sans-serif;
+
       color: #ff4d4d;
-      font-size: 2.5em;
+
+      font-size: 3em;
+
       animation: pulse 3s infinite;
+
+      text-shadow: 0 0 12px #ff4d4d;
+
     }
+
     .dashboard {
-      max-width: 720px;
+
+      max-width: 760px;
+
       margin: 25px auto;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 18px;
-      padding: 22px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 12px rgba(0,255,255,0.12);
+
+      background: rgba(255,255,255,0.05);
+
+      border: 1px solid rgba(255,255,255,0.08);
+
+      border-radius: 20px;
+
+      padding: 25px;
+
+      backdrop-filter: blur(12px);
+
+      box-shadow: 0 0 20px rgba(0,255,255,0.1);
+
     }
+
     .stat label, .dashboard h3 {
+
       color: #ff4d4d;
+
       font-weight: bold;
+
     }
+
     .stat span, .break-hash {
+
       font-family: monospace;
+
       font-size: 1.1em;
+
       word-break: break-word;
+
     }
+
     .countdown h3 {
+
       color: #ff4d4d;
+
       text-align: center;
+
     }
+
     input, button {
+
       width: 100%;
+
       padding: 10px;
+
       margin: 5px 0 10px;
-      border-radius: 5px;
+
+      border-radius: 6px;
+
       border: none;
+
       font-size: 1em;
+
     }
+
     button {
+
       background: #ff4d4d;
+
       color: white;
+
       font-weight: bold;
+
       cursor: pointer;
+
+      transition: all 0.2s ease-in-out;
+
     }
+
     button:hover {
+
       background: #ff6666;
+
+      transform: scale(1.03);
+
     }
+
     #qrCode img {
+
       max-width: 180px;
+
       margin-top: 12px;
+
       display: block;
+
     }
+
     ul { list-style: none; padding: 0; }
+
     li { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
 
+    canvas { margin-top: 20px; }
+
+
+
     @keyframes pulse {
+
       0%, 100% { text-shadow: 0 0 0px #ff4d4d; }
-      50% { text-shadow: 0 0 10px #ff4d4d; }
+
+      50% { text-shadow: 0 0 16px #ff4d4d; }
+
     }
+
   </style>
+
 </head>
+
 <body>
+
+
 
 <h1>$DOG Lottery</h1>
 
+
+
 <div class="dashboard">
+
   <div class="stat"><label>Live Pot:</label> <span id="potTotal">Loading...</span></div>
+
   <div class="stat"><label>Winner Payout:</label> <span id="winnerPayout">Loading...</span></div>
+
   <div class="stat"><label>Rollover:</label> <span id="rollover">Loading...</span></div>
+
   <div class="stat"><label>Creator Fee:</label> <span id="creatorFee">Loading...</span></div>
+
   <div class="stat"><label>Last Winner:</label> <span id="winnerTx">Loading...</span></div>
+
   <div class="stat"><label>$DOG Price (USD):</label> <span id="dogPrice">Loading...</span></div>
+
 </div>
+
+
+
+<canvas id="dogChart" height="100"></canvas>
+
+
 
 <div class="countdown">
+
   <h3>Next Round In:</h3>
+
   <span id="countdown">Loading...</span>
+
 </div>
 
-<div class="dashboard">
-  <h3>Current Entries</h3>
-  <ul id="entryList"></ul>
-</div>
+
 
 <div class="dashboard">
-  <h3>Past Winners</h3>
-  <ul id="winnerHistory"></ul>
-</div>
 
-<div class="dashboard">
   <h3>Track Entry</h3>
+
   <input type="text" id="trackInput" placeholder="Your txid or email">
+
   <button onclick="lookupEntry()">Check Entry</button>
+
   <div id="entryResult"></div>
+
 </div>
 
-<div class="dashboard">
-  <h3>Get Winner Alerts</h3>
-  <form id="notifyForm">
-    <input type="text" id="contactInput" placeholder="Email or X handle" required>
-    <input type="text" id="txidInput" placeholder="Your txid (optional)">
-    <button type="submit">Notify Me</button>
-    <p id="notifyStatus"></p>
-  </form>
-</div>
+
 
 <div class="dashboard">
+
   <h3>Send $DOG to:</h3>
+
   <div class="break-hash">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</div>
+
   <button onclick="generateQR()">Show QR Code</button>
+
   <div id="qrCode"></div>
+
 </div>
+
+
 
 <script>
+
   const formatDOG = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 4 });
 
+
+
   async function loadLotteryData() {
+
     const res = await fetch("lottery_status.json");
+
     const data = await res.json();
+
     document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
+
     document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
+
     document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
+
     document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
-    document.getElementById("winnerTx").innerHTML = `
-      <div class="break-hash">${data.winner.txid}</div>
-      <div style="color:#999;">${formatDOG(data.winner.amount)} $DOG</div>
-    `;
+
+    document.getElementById("winnerTx").innerHTML = `<div class="break-hash">${data.winner.txid}</div><div style="color:#999;">${formatDOG(data.winner.amount)} $DOG</div>`;
+
+
+
+    renderChart(data);
+
   }
 
-async function loadDOGPrice() {
-  try {
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dog-go-to-the-moon-rune&vs_currencies=usd');
-    const data = await response.json();
-    const dogPrice = data['dog-go-to-the-moon-rune'].usd;
-    document.getElementById("dogPrice").innerText = `$${dogPrice.toFixed(6)}`;
-  } catch (error) {
-    console.error('Error fetching $DOG price:', error);
-    document.getElementById("dogPrice").innerText = "Unavailable";
-  }
-}
 
 
-  async function loadEntries() {
-    const res = await fetch("lottery_entries.json");
-    const data = await res.json();
-    const list = document.getElementById("entryList");
-    list.innerHTML = "";
-    data.forEach(entry => {
-      const li = document.createElement("li");
-      li.innerHTML = `<div class="break-hash">${entry.txid}</div><div>${formatDOG(entry.amount)} $DOG</div>`;
-      list.appendChild(li);
+  function renderChart(data) {
+
+    const ctx = document.getElementById('dogChart').getContext('2d');
+
+    new Chart(ctx, {
+
+      type: 'bar',
+
+      data: {
+
+        labels: ['Pot', 'Winner', 'Rollover', 'Creator'],
+
+        datasets: [{
+
+          label: '$DOG Distribution',
+
+          data: [data.live_pot_total, data.payout_to_winner, data.rollover_to_next_round, data.creator_fee],
+
+          backgroundColor: ['#ff4d4d', '#00ffff', '#ffaa00', '#aaaaaa']
+
+        }]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        scales: {
+
+          y: { beginAtZero: true }
+
+        }
+
+      }
+
     });
+
   }
 
-  async function loadWinners() {
-    const res = await fetch("winners_history.json");
-    const data = await res.json();
-    const list = document.getElementById("winnerHistory");
-    list.innerHTML = "";
-    data.slice(-10).reverse().forEach(w => {
-      const li = document.createElement("li");
-      li.innerHTML = `<div class="break-hash">${w.txid}</div><div>${formatDOG(w.amount)} $DOG — ${new Date(w.timestamp).toLocaleDateString()}</div>`;
-      list.appendChild(li);
-    });
+
+
+  async function loadDOGPrice() {
+
+    try {
+
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dog-go-to-the-moon-rune&vs_currencies=usd');
+
+      const data = await response.json();
+
+      document.getElementById("dogPrice").innerText = `$${data["dog-go-to-the-moon-rune"].usd.toFixed(6)}`;
+
+    } catch {
+
+      document.getElementById("dogPrice").innerText = "Unavailable";
+
+    }
+
   }
+
+
 
   function generateQR() {
+
     const addr = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
+
     QRCode.toDataURL(addr, (err, url) => {
+
       document.getElementById("qrCode").innerHTML = `<img src="${url}" alt="QR Code">`;
+
     });
+
   }
+
+
 
   function startCountdown() {
+
     const target = new Date();
+
     target.setUTCHours(0, 0, 0, 0);
+
     if (Date.now() > target) target.setUTCDate(target.getUTCDate() + 1);
+
     function update() {
+
       const now = new Date().getTime();
-      const dist = target.getTime() - now;
+
+      const dist = target - now;
+
       const h = Math.floor(dist / (1000 * 60 * 60));
+
       const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+
       const s = Math.floor((dist % (1000 * 60)) / 1000);
+
       document.getElementById("countdown").innerText = `${h}h ${m}m ${s}s`;
+
     }
+
     update();
+
     setInterval(update, 1000);
+
   }
+
+
 
   async function lookupEntry() {
+
     const input = document.getElementById("trackInput").value.trim().toLowerCase();
+
     const res = await fetch("lottery_entries.json");
+
     const entries = await res.json();
+
     const match = entries.find(e =>
+
       e.txid.toLowerCase().includes(input) || (e.email && e.email.toLowerCase() === input)
+
     );
+
     document.getElementById("entryResult").innerText = match
+
       ? `Found: ${match.txid} — ${formatDOG(match.amount)} $DOG`
+
       : "No match found.";
+
   }
 
-  document.getElementById("notifyForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const contact = document.getElementById("contactInput").value.trim();
-    const txid = document.getElementById("txidInput").value.trim();
-    const data = { contact, txid, timestamp: new Date().toISOString() };
-    console.log("Subscription request:", data); // Replace with server push if needed
-    document.getElementById("notifyStatus").innerText = "You're subscribed!";
-    document.getElementById("notifyForm").reset();
-  });
+
 
   loadLotteryData();
+
   loadDOGPrice();
-  loadEntries();
-  loadWinners();
+
   startCountdown();
+
 </script>
+
 </body>
+
 </html>
