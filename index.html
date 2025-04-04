@@ -4,14 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>$DOG Lottery Dashboard</title>
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ff4d4d">
   <link rel="icon" href="icon-192.png">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary: #ff4d4d;
+      --bg-dark: #121212;
+      --neon: #00ffff;
+      --text-light: #e0e0e0;
+    }
     body {
-      background: #121212;
-      color: #e0e0e0;
+      background: var(--bg-dark);
+      color: var(--text-light);
       font-family: 'Inter', sans-serif;
       margin: 0;
       padding: 20px;
@@ -19,207 +27,216 @@
     h1 {
       text-align: center;
       font-family: 'Orbitron', sans-serif;
-      color: #ff4d4d;
+      color: var(--primary);
+      margin-bottom: 20px;
       font-size: 2.5em;
       animation: pulse 3s infinite;
     }
     .dashboard {
       max-width: 720px;
       margin: 25px auto;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
       border-radius: 18px;
       padding: 22px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 12px rgba(0,255,255,0.12);
+      box-shadow: 0 0 12px rgba(0, 255, 255, 0.12);
+      transition: 0.3s;
     }
-    .stat label, .dashboard h3 {
-      color: #ff4d4d;
+    .stat, .form-group {
+      margin-bottom: 16px;
+    }
+    .stat label {
       font-weight: bold;
+      display: block;
+      color: #bbb;
     }
-    .stat span, .break-hash {
-      font-family: monospace;
-      font-size: 1.1em;
+    .stat span, .form-group span {
+      font-size: 1.5em;
+      color: #fff;
       word-break: break-word;
     }
-    .countdown h3 {
-      color: #ff4d4d;
+    .break-hash {
+      word-break: break-word;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+    .countdown, .form-section {
       text-align: center;
+      margin-top: 30px;
+    }
+    .countdown h3 {
+      color: var(--primary);
+    }
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+    li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
     }
     input, button {
       width: 100%;
       padding: 10px;
-      margin: 5px 0 10px;
-      border-radius: 5px;
+      margin-top: 8px;
+      border-radius: 6px;
       border: none;
       font-size: 1em;
     }
     button {
-      background: #ff4d4d;
-      color: white;
+      background: var(--primary);
+      color: #fff;
       font-weight: bold;
       cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
     }
     button:hover {
       background: #ff6666;
+      transform: translateY(-2px);
     }
-    #qrCode img {
-      max-width: 180px;
-      margin-top: 12px;
-      display: block;
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #00ffcc;
+      color: #000;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      display: none;
     }
-    ul { list-style: none; padding: 0; }
-    li { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
-
     @keyframes pulse {
-      0%, 100% { text-shadow: 0 0 0px #ff4d4d; }
-      50% { text-shadow: 0 0 10px #ff4d4d; }
+      0%, 100% { text-shadow: 0 0 0px var(--primary); }
+      50% { text-shadow: 0 0 10px var(--primary); }
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 2em; }
+      .dashboard { padding: 16px; }
     }
   </style>
 </head>
 <body>
+  <h1>$DOG Lottery</h1>
 
-<h1>$DOG Lottery</h1>
+  <div class="dashboard">
+    <div class="stat"><label>Live Pot Total:</label><span id="potTotal">Loading...</span></div>
+    <div class="stat"><label>Winner Payout (75%):</label><span id="winnerPayout">Loading...</span></div>
+    <div class="stat"><label>Rollover (20%):</label><span id="rollover">Loading...</span></div>
+    <div class="stat"><label>Creator Fee (5%):</label><span id="creatorFee">Loading...</span></div>
+    <div class="stat"><label>Last Winner:</label><span id="winnerTx" class="break-hash">Loading...</span></div>
+  </div>
 
-<div class="dashboard">
-  <div class="stat"><label>Live Pot:</label> <span id="potTotal">Loading...</span></div>
-  <div class="stat"><label>Winner Payout:</label> <span id="winnerPayout">Loading...</span></div>
-  <div class="stat"><label>Rollover:</label> <span id="rollover">Loading...</span></div>
-  <div class="stat"><label>Creator Fee:</label> <span id="creatorFee">Loading...</span></div>
-  <div class="stat"><label>Last Winner:</label> <span id="winnerTx">Loading...</span></div>
-</div>
+  <div class="dashboard countdown">
+    <h3>Next Round Starts In:</h3>
+    <span id="countdown">Loading...</span>
+  </div>
 
-<div class="countdown">
-  <h3>Next Round In:</h3>
-  <span id="countdown">Loading...</span>
-</div>
+  <div class="dashboard">
+    <h3 style="color:var(--primary);">Current Entries</h3>
+    <ul id="entryList"></ul>
+  </div>
 
-<div class="dashboard">
-  <h3>Current Entries</h3>
-  <ul id="entryList"></ul>
-</div>
+  <div class="dashboard">
+    <h3 style="color:var(--primary);">Past Winners</h3>
+    <ul id="winnerHistory"></ul>
+  </div>
 
-<div class="dashboard">
-  <h3>Past Winners</h3>
-  <ul id="winnerHistory"></ul>
-</div>
+  <div class="dashboard">
+    <h3 style="color:var(--primary);">Notify Me</h3>
+    <div class="form-group">
+      <input id="contactInput" placeholder="Enter Email or @XHandle" />
+      <input id="txInput" placeholder="Enter Your TxID or Address" />
+      <button onclick="saveNotification()">Notify Me if I Win</button>
+    </div>
+  </div>
 
-<div class="dashboard">
-  <h3>Track Entry</h3>
-  <input type="text" id="trackInput" placeholder="Your txid or email">
-  <button onclick="lookupEntry()">Check Entry</button>
-  <div id="entryResult"></div>
-</div>
+  <div class="dashboard">
+    <h3 style="color:var(--primary);">QR Code Generator</h3>
+    <button onclick="generateQR()">Generate QR</button>
+    <div id="qrCode" style="margin-top:10px;"></div>
+  </div>
 
-<div class="dashboard">
-  <h3>Get Winner Alerts</h3>
-  <form id="notifyForm">
-    <input type="text" id="contactInput" placeholder="Email or X handle" required>
-    <input type="text" id="txidInput" placeholder="Your txid (optional)">
-    <button type="submit">Notify Me</button>
-    <p id="notifyStatus"></p>
-  </form>
-</div>
+  <div class="toast" id="toast">Saved!</div>
 
-<div class="dashboard">
-  <h3>Send $DOG to:</h3>
-  <div class="break-hash">bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4</div>
-  <button onclick="generateQR()">Show QR Code</button>
-  <div id="qrCode"></div>
-</div>
+  <script>
+    const formatDOG = (n) => Number(n).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 4});
 
-<script>
-  const formatDOG = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 4 });
-
-  async function loadLotteryData() {
-    const res = await fetch("lottery_status.json");
-    const data = await res.json();
-    document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
-    document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
-    document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
-    document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
-    document.getElementById("winnerTx").innerHTML = `
-      <div class="break-hash">${data.winner.txid}</div>
-      <div style="color:#999;">${formatDOG(data.winner.amount)} $DOG</div>
-    `;
-  }
-
-  async function loadEntries() {
-    const res = await fetch("lottery_entries.json");
-    const data = await res.json();
-    const list = document.getElementById("entryList");
-    list.innerHTML = "";
-    data.forEach(entry => {
-      const li = document.createElement("li");
-      li.innerHTML = `<div class="break-hash">${entry.txid}</div><div>${formatDOG(entry.amount)} $DOG</div>`;
-      list.appendChild(li);
-    });
-  }
-
-  async function loadWinners() {
-    const res = await fetch("winners_history.json");
-    const data = await res.json();
-    const list = document.getElementById("winnerHistory");
-    list.innerHTML = "";
-    data.slice(-10).reverse().forEach(w => {
-      const li = document.createElement("li");
-      li.innerHTML = `<div class="break-hash">${w.txid}</div><div>${formatDOG(w.amount)} $DOG — ${new Date(w.timestamp).toLocaleDateString()}</div>`;
-      list.appendChild(li);
-    });
-  }
-
-  function generateQR() {
-    const addr = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
-    QRCode.toDataURL(addr, (err, url) => {
-      document.getElementById("qrCode").innerHTML = `<img src="${url}" alt="QR Code">`;
-    });
-  }
-
-  function startCountdown() {
-    const target = new Date();
-    target.setUTCHours(0, 0, 0, 0);
-    if (Date.now() > target) target.setUTCDate(target.getUTCDate() + 1);
-
-    function update() {
-      const now = new Date().getTime();
-      const dist = target.getTime() - now;
-      const h = Math.floor(dist / (1000 * 60 * 60));
-      const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((dist % (1000 * 60)) / 1000);
-      document.getElementById("countdown").innerText = `${h}h ${m}m ${s}s`;
+    async function loadLotteryData() {
+      const res = await fetch("lottery_status.json");
+      const data = await res.json();
+      document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
+      document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
+      document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
+      document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
+      document.getElementById("winnerTx").innerHTML = `<div class="break-hash">${data.winner.txid}</div><div style="color:#aaa;">${formatDOG(data.winner.amount)} $DOG</div>`;
     }
 
-    update();
-    setInterval(update, 1000);
-  }
+    async function loadEntries() {
+      const res = await fetch("lottery_entries.json");
+      const entries = await res.json();
+      const list = document.getElementById("entryList");
+      list.innerHTML = "";
+      entries.forEach(e => {
+        const li = document.createElement("li");
+        li.innerHTML = `<div class="break-hash">${e.txid}</div><div style="color:#ccc;">${formatDOG(e.amount)} $DOG</div>`;
+        list.appendChild(li);
+      });
+    }
 
-  async function lookupEntry() {
-    const input = document.getElementById("trackInput").value.trim().toLowerCase();
-    const res = await fetch("lottery_entries.json");
-    const entries = await res.json();
-    const match = entries.find(e =>
-      e.txid.toLowerCase().includes(input) || (e.email && e.email.toLowerCase() === input)
-    );
-    document.getElementById("entryResult").innerText = match
-      ? `Found entry: ${match.txid} — ${formatDOG(match.amount)} $DOG`
-      : "No entry found.";
-  }
+    async function loadWinners() {
+      const res = await fetch("winners_history.json");
+      const winners = await res.json();
+      const list = document.getElementById("winnerHistory");
+      list.innerHTML = "";
+      winners.slice(-10).reverse().forEach(w => {
+        const li = document.createElement("li");
+        li.innerHTML = `<div class="break-hash">${w.txid}</div><div style="color:#aaa;">${formatDOG(w.amount)} $DOG • ${new Date(w.timestamp).toLocaleDateString()}</div>`;
+        list.appendChild(li);
+      });
+    }
 
-  document.getElementById("notifyForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const contact = document.getElementById("contactInput").value.trim();
-    const txid = document.getElementById("txidInput").value.trim();
-    const data = { contact, txid, timestamp: new Date().toISOString() };
-    console.log("Notification request saved:", data);
-    document.getElementById("notifyStatus").innerText = "You're subscribed!";
-    document.getElementById("notifyForm").reset();
-  });
+    function startCountdown() {
+      const now = new Date().getTime();
+      const next = new Date();
+      next.setUTCHours(0, 0, 0, 0);
+      if (now > next.getTime()) next.setUTCDate(next.getUTCDate() + 1);
+      setInterval(() => {
+        const dist = next - new Date().getTime();
+        const h = Math.floor(dist / 3600000);
+        const m = Math.floor((dist % 3600000) / 60000);
+        const s = Math.floor((dist % 60000) / 1000);
+        document.getElementById("countdown").innerText = `${h}h ${m}m ${s}s`;
+      }, 1000);
+    }
 
-  loadLotteryData();
-  loadEntries();
-  loadWinners();
-  startCountdown();
-</script>
+    function saveNotification() {
+      const contact = document.getElementById("contactInput").value.trim();
+      const tx = document.getElementById("txInput").value.trim();
+      if (contact && tx) {
+        console.log("Notification saved for:", contact, tx);
+        showToast("You’ll be notified!");
+      }
+    }
 
+    function generateQR() {
+      const address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
+      QRCode.toDataURL(address, (err, url) => {
+        document.getElementById("qrCode").innerHTML = `<img src="${url}" width="180">`;
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.innerText = msg;
+      toast.style.display = "block";
+      setTimeout(() => toast.style.display = "none", 3000);
+    }
+
+    loadLotteryData();
+    loadEntries();
+    loadWinners();
+    startCountdown();
+  </script>
 </body>
 </html>
