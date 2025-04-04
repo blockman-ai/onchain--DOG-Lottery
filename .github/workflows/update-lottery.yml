@@ -1,57 +1,38 @@
-import requests, json, random
-from datetime import datetime, timedelta
-from decimal import Decimal
+name: Update Lottery Data
 
-LOTTERY_ADDRESS = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4"
-CREATOR_ADDRESS = "bc1prhcdy4ytncv8xgq0xwtqg0gfk2t38asddq3ex7xxa43dxhrfhkhsn6yhk9"
-API_URL = f"https://open-api.unisat.io/v1/indexer/address/{LOTTERY_ADDRESS}/rune/txs"
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:      # Manual trigger option
 
-headers = {"accept": "application/json"}
-entries = []
+jobs:
+  update-lottery:
+    runs-on: ubuntu-latest
 
-# Convert from raw Rune to float
-def convert_rune_amount(raw_amount: str) -> float:
-    return float(Decimal(raw_amount) / Decimal(1e9))
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-try:
-    res = requests.get(API_URL, headers=headers)
-    res.raise_for_status()
-    data = res.json()
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-    if "data" not in data or "transactions" not in data["data"]:
-        raise ValueError("Invalid response format")
+      - name: Install Python (if needed)
+        run: |
+          python -m pip install --upgrade pip
 
-    txs = data["data"]["transactions"]
-    cutoff_time = datetime.utcnow() - timedelta(hours=24)
+      - name: Run Lottery Script
+        run: python scripts/update_lottery_status.py
 
-    for tx in txs:
-        tx_time = datetime.utcfromtimestamp(tx.get("blocktime", datetime.utcnow().timestamp()))
-        if tx_time >= cutoff_time:
-            for t in tx.get("transfers", []):
-                if t.get("tick") == "DOG" and t.get("to") == LOTTERY_ADDRESS:
-                    entries.append({
-                        "txid": tx["txid"],
-                        "amount": round(convert_rune_amount(t["amount"]), 4),
-                        "timestamp": tx_time.isoformat()
-                    })
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "blockman-ai"
+          git config --global user.email "bot@blockman.ai"
+          git add lottery_entries.json lottery_status.json winners_history.json
 
-    total = sum(e["amount"] for e in entries)
-    winner = random.choice(entries) if entries else {"txid": "none", "amount": 0}
-
-    status = {
-        "live_pot_total": total,
-        "payout_to_winner": round(total * 0.75, 4),
-        "rollover_to_next_round": round(total * 0.20, 4),
-        "creator_fee": round(total * 0.05, 4),
-        "winner": winner,
-        "creator_address": CREATOR_ADDRESS
-    }
-
-    with open("lottery_entries.json", "w") as f:
-        json.dump(entries, f, indent=2)
-
-    with open("lottery_status.json", "w") as f:
-        json.dump(status, f, indent=2)
-
-except Exception as e:
-    print("Error:", e)
+          if ! git diff --cached --quiet; then
+            git commit -m "Update lottery data automatically"
+            git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }} HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit."
