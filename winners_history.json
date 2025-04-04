@@ -1,4 +1,10 @@
 [
-  { "round": 1, "txid": "tx1", "amount": 10, "date": "2024-04-02" },
-  { "round": 2, "txid": "tx002", "amount": 20, "date": "2024-04-03" }
+  {
+    "date": "2025-04-04",
+    "winner": {
+      "txid": "ghi789",
+      "amount": 6000,
+      "timestamp": "2025-04-03T01:10:00"
+    }
+  }
 ]
