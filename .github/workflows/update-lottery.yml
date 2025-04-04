@@ -15,16 +15,20 @@ def convert_rune_amount(raw_amount: str) -> float:
 
 try:
     res = requests.get(API_URL, headers=headers)
-    txs = res.json()["data"]["transactions"]
+    res.raise_for_status()
+    data = res.json()
 
-    # Only include txs from the last 24 hours
+    if "data" not in data or "transactions" not in data["data"]:
+        raise ValueError("Invalid response format")
+
+    txs = data["data"]["transactions"]
     cutoff_time = datetime.utcnow() - timedelta(hours=24)
 
     for tx in txs:
         tx_time = datetime.utcfromtimestamp(tx.get("blocktime", datetime.utcnow().timestamp()))
         if tx_time >= cutoff_time:
             for t in tx.get("transfers", []):
-                if t["tick"] == "DOG" and t["to"] == LOTTERY_ADDRESS:
+                if t.get("tick") == "DOG" and t.get("to") == LOTTERY_ADDRESS:
                     entries.append({
                         "txid": tx["txid"],
                         "amount": round(convert_rune_amount(t["amount"]), 4),
