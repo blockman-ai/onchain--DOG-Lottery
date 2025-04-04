@@ -77,6 +77,16 @@
       font-size: 0.9em;
     }
 
+    ul {
+      padding-left: 0;
+      list-style: none;
+    }
+
+    li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
     @media (max-width: 600px) {
       body {
         padding: 15px;
@@ -132,12 +142,12 @@
 
   <div class="dashboard">
     <h3 style="color:#ff4d4d;">Current Entries</h3>
-    <ul id="entryList" style="list-style: none; padding: 0;"></ul>
+    <ul id="entryList"></ul>
   </div>
 
   <div class="dashboard">
     <h3 style="color:#ff4d4d;">Past Winners</h3>
-    <ul id="winnerHistory" style="list-style: none; padding: 0;"></ul>
+    <ul id="winnerHistory"></ul>
   </div>
 
   <script>
@@ -159,8 +169,8 @@
           <div class="break-hash" style="color:#00ffff;">${data.winner.txid}</div>
           <div style="color:#888;">(${formatDOG(data.winner.amount)} $DOG)</div>
         `;
-      } catch {
-        document.getElementById("winnerTx").innerHTML = `<span style="color:red;">Failed to load data</span>`;
+      } catch (err) {
+        document.getElementById("winnerTx").innerHTML = `<span style="color:red;">Failed to load</span>`;
       }
     }
 
@@ -172,35 +182,30 @@
         list.innerHTML = "";
         entries.forEach(entry => {
           const li = document.createElement("li");
-          li.style.padding = "6px 0";
-          li.innerHTML = `
-            <div class="break-hash">Tx: ${entry.txid}</div>
-            <div style="color:#ccc;">— ${formatDOG(entry.amount)} $DOG</div>
-          `;
+          li.innerHTML = `<div class="break-hash">${entry.txid}</div><div style="color:#ccc;">${formatDOG(entry.amount)} $DOG</div>`;
           list.appendChild(li);
         });
       } catch {
-        document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
+        document.getElementById("entryList").innerHTML = "<li style='color:red;'>No entries</li>";
       }
     }
 
-    async function loadWinnerHistory() {
+    async function loadWinners() {
       try {
         const res = await fetch("winners_history.json");
-        const history = await res.json();
+        const winners = await res.json();
         const list = document.getElementById("winnerHistory");
         list.innerHTML = "";
-        history.slice(-10).reverse().forEach(w => {
+        winners.slice(-10).reverse().forEach(w => {
           const li = document.createElement("li");
-          li.style.padding = "6px 0";
           li.innerHTML = `
-            <div class="break-hash">${w.date}</div>
-            <div style="color:#ccc;">${w.txid} — ${formatDOG(w.amount)} $DOG</div>
+            <div class="break-hash">${w.txid}</div>
+            <div style="color:#999;">${formatDOG(w.amount)} $DOG • ${new Date(w.timestamp).toLocaleDateString()}</div>
           `;
           list.appendChild(li);
         });
       } catch {
-        document.getElementById("winnerHistory").innerHTML = `<li style="color:red;">Unable to load winner history</li>`;
+        document.getElementById("winnerHistory").innerHTML = "<li style='color:red;'>No winner history</li>";
       }
     }
 
@@ -208,25 +213,23 @@
       const now = new Date().getTime();
       const nextRound = new Date();
       nextRound.setUTCHours(0, 0, 0, 0);
-      if (now > nextRound.getTime()) {
-        nextRound.setUTCDate(nextRound.getUTCDate() + 1);
+      if (now > nextRound.getTime()) nextRound.setUTCDate(nextRound.getUTCDate() + 1);
+
+      function update() {
+        const dist = nextRound - new Date().getTime();
+        const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((dist % (1000 * 60)) / 1000);
+        document.getElementById("countdown").innerText = `${h}h ${m}m ${s}s`;
       }
 
-      function updateCountdown() {
-        const distance = nextRound - new Date().getTime();
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
-      }
-
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
+      update();
+      setInterval(update, 1000);
     }
 
     loadLotteryData();
     loadEntries();
-    loadWinnerHistory();
+    loadWinners();
     startCountdown();
   </script>
 
