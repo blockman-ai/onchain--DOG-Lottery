@@ -135,68 +135,100 @@
     <ul id="entryList" style="list-style: none; padding: 0;"></ul>
   </div>
 
+  <div class="dashboard">
+    <h3 style="color:#ff4d4d;">Past Winners</h3>
+    <ul id="winnerHistory" style="list-style: none; padding: 0;"></ul>
+  </div>
+
   <script>
-  const formatDOG = (n) => Number(n).toLocaleString();
+    const formatDOG = (n) => Number(n).toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 4
+    });
 
-  async function loadLotteryData() {
-    try {
-      const res = await fetch("lottery_status.json");
-      const data = await res.json();
+    async function loadLotteryData() {
+      try {
+        const res = await fetch("lottery_status.json");
+        const data = await res.json();
 
-      document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
-      document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
-      document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
-      document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
-      document.getElementById("winnerTx").innerHTML = `
-        <div class="break-hash" style="color:#00ffff;">${data.winner.txid}</div>
-        <div style="color:#888;">(${formatDOG(data.winner.amount)} $DOG)</div>
-      `;
-    } catch (err) {
-      document.getElementById("winnerTx").innerHTML = `<span style="color:red;">Failed to load data</span>`;
-    }
-  }
-
-  async function loadEntries() {
-    try {
-      const res = await fetch("lottery_entries.json");
-      const entries = await res.json();
-      const list = document.getElementById("entryList");
-      list.innerHTML = "";
-      entries.forEach(entry => {
-        const li = document.createElement("li");
-        li.style.padding = "6px 0";
-        li.innerHTML = `
-          <div class="break-hash">Tx: ${entry.txid}</div>
-          <div style="color:#ccc;">— ${formatDOG(entry.amount)} $DOG</div>
+        document.getElementById("potTotal").innerText = `${formatDOG(data.live_pot_total)} $DOG`;
+        document.getElementById("winnerPayout").innerText = `${formatDOG(data.payout_to_winner)} $DOG`;
+        document.getElementById("rollover").innerText = `${formatDOG(data.rollover_to_next_round)} $DOG`;
+        document.getElementById("creatorFee").innerText = `${formatDOG(data.creator_fee)} $DOG`;
+        document.getElementById("winnerTx").innerHTML = `
+          <div class="break-hash" style="color:#00ffff;">${data.winner.txid}</div>
+          <div style="color:#888;">(${formatDOG(data.winner.amount)} $DOG)</div>
         `;
-        list.appendChild(li);
-      });
-    } catch {
-      document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
-    }
-  }
-
-  function startCountdown() {
-    const now = new Date().getTime();
-    const nextRound = new Date();
-    nextRound.setUTCHours(0, 0, 0, 0);
-    if (now > nextRound.getTime()) nextRound.setUTCDate(nextRound.getUTCDate() + 1);
-
-    function updateCountdown() {
-      const distance = nextRound - new Date().getTime();
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
+      } catch {
+        document.getElementById("winnerTx").innerHTML = `<span style="color:red;">Failed to load data</span>`;
+      }
     }
 
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-  }
+    async function loadEntries() {
+      try {
+        const res = await fetch("lottery_entries.json");
+        const entries = await res.json();
+        const list = document.getElementById("entryList");
+        list.innerHTML = "";
+        entries.forEach(entry => {
+          const li = document.createElement("li");
+          li.style.padding = "6px 0";
+          li.innerHTML = `
+            <div class="break-hash">Tx: ${entry.txid}</div>
+            <div style="color:#ccc;">— ${formatDOG(entry.amount)} $DOG</div>
+          `;
+          list.appendChild(li);
+        });
+      } catch {
+        document.getElementById("entryList").innerHTML = `<li style="color:red;">No entries found.</li>`;
+      }
+    }
 
-  loadLotteryData();
-  loadEntries();
-  startCountdown();
-</script>
+    async function loadWinnerHistory() {
+      try {
+        const res = await fetch("winners_history.json");
+        const history = await res.json();
+        const list = document.getElementById("winnerHistory");
+        list.innerHTML = "";
+        history.slice(-10).reverse().forEach(w => {
+          const li = document.createElement("li");
+          li.style.padding = "6px 0";
+          li.innerHTML = `
+            <div class="break-hash">${w.date}</div>
+            <div style="color:#ccc;">${w.txid} — ${formatDOG(w.amount)} $DOG</div>
+          `;
+          list.appendChild(li);
+        });
+      } catch {
+        document.getElementById("winnerHistory").innerHTML = `<li style="color:red;">Unable to load winner history</li>`;
+      }
+    }
 
- 
+    function startCountdown() {
+      const now = new Date().getTime();
+      const nextRound = new Date();
+      nextRound.setUTCHours(0, 0, 0, 0);
+      if (now > nextRound.getTime()) {
+        nextRound.setUTCDate(nextRound.getUTCDate() + 1);
+      }
+
+      function updateCountdown() {
+        const distance = nextRound - new Date().getTime();
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    }
+
+    loadLotteryData();
+    loadEntries();
+    loadWinnerHistory();
+    startCountdown();
+  </script>
+
+</body>
+</html>
