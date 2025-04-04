@@ -1,5 +1,8 @@
+# Rewriting the full HTML as seen in the screenshots into a final version
+
+html_final_code = """
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -7,26 +10,12 @@
   <meta name="theme-color" content="#ff4d4d">
   <link rel="icon" href="icon-192.png">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Inter&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root {
-      --bg: #121212;
-      --text: #e0e0e0;
-      --accent: #ff4d4d;
-      --card-bg: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.1);
-    }
-    [data-theme="light"] {
-      --bg: #f4f4f4;
-      --text: #111;
-      --accent: #ff4d4d;
-      --card-bg: #fff;
-      --border: #ccc;
-    }
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: #121212;
+      color: #e0e0e0;
       font-family: 'Inter', sans-serif;
       margin: 0;
       padding: 20px;
@@ -34,26 +23,40 @@
     h1 {
       text-align: center;
       font-family: 'Orbitron', sans-serif;
-      color: var(--accent);
+      color: #ff4d4d;
       font-size: 2.5em;
+      animation: pulse 3s infinite;
+    }
+    .theme-toggle {
+      text-align: center;
+      padding: 10px;
+      background: #ff4d4d;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
     }
     .dashboard {
       max-width: 720px;
       margin: 25px auto;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 0 12px rgba(0,255,255,0.1);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px;
+      padding: 22px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 12px rgba(0,255,255,0.12);
     }
     .stat label, .dashboard h3 {
-      color: var(--accent);
+      color: #ff4d4d;
       font-weight: bold;
     }
     .stat span, .break-hash {
       font-family: monospace;
-      font-size: 1em;
+      font-size: 1.1em;
       word-break: break-word;
+    }
+    .countdown h3 {
+      color: #ff4d4d;
+      text-align: center;
     }
     input, button {
       width: 100%;
@@ -64,7 +67,7 @@
       font-size: 1em;
     }
     button {
-      background: var(--accent);
+      background: #ff4d4d;
       color: white;
       font-weight: bold;
       cursor: pointer;
@@ -72,18 +75,24 @@
     button:hover {
       background: #ff6666;
     }
+    #qrCode img {
+      max-width: 180px;
+      margin-top: 12px;
+      display: block;
+    }
     ul { list-style: none; padding: 0; }
-    li { padding: 6px 0; border-bottom: 1px solid var(--border); }
-    .toggle-theme {
-      position: fixed;
-      top: 10px;
-      right: 10px;
+    li { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+
+    @keyframes pulse {
+      0%, 100% { text-shadow: 0 0 0px #ff4d4d; }
+      50% { text-shadow: 0 0 10px #ff4d4d; }
     }
   </style>
 </head>
 <body>
 
-<button class="toggle-theme" onclick="toggleTheme()">Toggle Theme</button>
+<div class="theme-toggle" onclick="toggleTheme()">Toggle Theme</div>
+
 <h1>$DOG Lottery</h1>
 
 <div class="dashboard">
@@ -95,7 +104,7 @@
 </div>
 
 <div class="dashboard">
-  <canvas id="dogChart" height="100"></canvas>
+  <canvas id="lotteryChart" height="120"></canvas>
 </div>
 
 <div class="dashboard">
@@ -107,12 +116,10 @@
 
 <div class="dashboard">
   <h3>Notify Me</h3>
-  <form id="notifyForm">
-    <input type="text" id="contactInput" placeholder="Email or X handle" required>
-    <input type="text" id="txidInput" placeholder="Your txid (optional)">
-    <button type="submit">Subscribe</button>
-    <p id="notifyStatus"></p>
-  </form>
+  <input type="text" id="contactInput" placeholder="Email or X handle">
+  <input type="text" id="txidInput" placeholder="Your txid (optional)">
+  <button onclick="subscribe()">Subscribe</button>
+  <p id="notifyStatus"></p>
 </div>
 
 <div class="dashboard">
@@ -123,71 +130,90 @@
 </div>
 
 <script>
-  const formatDOG = n => Number(n).toLocaleString(undefined, { maximumFractionDigits: 4 });
+  let darkMode = true;
+  function toggleTheme() {
+    darkMode = !darkMode;
+    document.body.style.background = darkMode ? '#121212' : '#ffffff';
+    document.body.style.color = darkMode ? '#e0e0e0' : '#121212';
+  }
+
+  function formatDOG(n) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: 4 });
+  }
 
   async function loadData() {
-    const res = await fetch("lottery_status.json");
+    const res = await fetch('lottery_status.json');
     const data = await res.json();
-    document.getElementById("potTotal").innerText = formatDOG(data.live_pot_total) + " $DOG";
-    document.getElementById("winnerPayout").innerText = formatDOG(data.payout_to_winner) + " $DOG";
-    document.getElementById("rollover").innerText = formatDOG(data.rollover_to_next_round) + " $DOG";
-    document.getElementById("creatorFee").innerText = formatDOG(data.creator_fee) + " $DOG";
-    document.getElementById("winnerTx").innerText = data.winner.txid;
+    document.getElementById('potTotal').innerText = formatDOG(data.live_pot_total) + " $DOG";
+    document.getElementById('winnerPayout').innerText = formatDOG(data.payout_to_winner) + " $DOG";
+    document.getElementById('rollover').innerText = formatDOG(data.rollover_to_next_round) + " $DOG";
+    document.getElementById('creatorFee').innerText = formatDOG(data.creator_fee) + " $DOG";
+    document.getElementById('winnerTx').innerText = data.winner.txid;
+
+    const ctx = document.getElementById("lotteryChart").getContext("2d");
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Pot', 'Winner', 'Rollover', 'Creator'],
+        datasets: [{
+          label: '$DOG Distribution',
+          data: [data.live_pot_total, data.payout_to_winner, data.rollover_to_next_round, data.creator_fee],
+          backgroundColor: ['#ff4d4d', '#00ffff', '#ffaa00', '#ccc']
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { labels: { color: darkMode ? '#fff' : '#000' } }
+        },
+        scales: {
+          y: {
+            ticks: { color: darkMode ? '#fff' : '#000' }
+          },
+          x: {
+            ticks: { color: darkMode ? '#fff' : '#000' }
+          }
+        }
+      }
+    });
   }
 
   async function lookupEntry() {
-    const val = document.getElementById("trackInput").value.trim().toLowerCase();
+    const input = document.getElementById("trackInput").value.trim().toLowerCase();
     const res = await fetch("lottery_entries.json");
     const entries = await res.json();
-    const match = entries.find(e => e.txid.toLowerCase().includes(val) || e.email === val);
+    const match = entries.find(e =>
+      e.txid.toLowerCase().includes(input) || (e.email && e.email.toLowerCase() === input)
+    );
     document.getElementById("entryResult").innerText = match
-      ? `Found: ${match.txid} - ${formatDOG(match.amount)} $DOG`
-      : "Not found.";
+      ? `Found: ${match.txid} — ${formatDOG(match.amount)} $DOG`
+      : "No entry found.";
   }
 
-  document.getElementById("notifyForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const contact = document.getElementById("contactInput").value;
-    document.getElementById("notifyStatus").innerText = `You're subscribed, ${contact}!`;
-  });
-
-  function toggleTheme() {
-    const root = document.documentElement;
-    root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+  function subscribe() {
+    const contact = document.getElementById("contactInput").value.trim();
+    const txid = document.getElementById("txidInput").value.trim();
+    const msg = `Subscribed ${contact} for winner alerts.`;
+    console.log({ contact, txid });
+    document.getElementById("notifyStatus").innerText = msg;
   }
 
   function generateQR() {
-    const address = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
-    QRCode.toDataURL(address, (err, url) => {
+    const addr = "bc1psewn5hprrlhhcze9x9lcpd74wmpy26cwaxpzc270v8x0h9kt3kls6hrax4";
+    QRCode.toDataURL(addr, (err, url) => {
       document.getElementById("qrCode").innerHTML = `<img src="${url}" alt="QR Code">`;
     });
   }
 
-  function loadChart() {
-    const ctx = document.getElementById('dogChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ["Pot", "Winner", "Rollover", "Creator"],
-        datasets: [{
-          label: '$DOG Distribution',
-          data: [5000, 3750, 1000, 250],
-          backgroundColor: ['#ff4d4d', '#00ffff', '#ffaa00', '#888']
-        }]
-      },
-      options: { responsive: true }
-    });
-  }
-
   loadData();
-  loadChart();
 </script>
 
 </body>
 </html>
 """
 
-with open("/mnt/data/final_dog_lottery_dashboard.html", "w") as f:
+# Save to file
+path = "/mnt/data/final_dog_lottery_dashboard_v2.html"
+with open(path, "w") as f:
     f.write(html_final_code)
 
-"/mnt/data/final_dog_lottery_dashboard.html"
+path
